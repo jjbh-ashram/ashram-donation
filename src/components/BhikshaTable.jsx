@@ -1,7 +1,8 @@
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useState } from 'react';
+import { DEFAULT_SELECTED_YEARS, formatYearRange } from '../config/years';
 
-const BhikshaTable = ({ isEditMode = false, selectedYears = [2025, 2026, 2027, 2028, 2029, 2030] }) => {
+const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEARS }) => {
     const { bhaktData, loading, error, toggleDonation } = useBhaktData();
     const [hoveredRowId, setHoveredRowId] = useState(null);
     
@@ -200,7 +201,7 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = [2025, 2026, 2027, 2
                             Mode: {isEditMode ? 'Edit' : 'Locked'}
                         </span>
                         <span className="font-medium">
-                            Years: {years.length > 0 ? (years.length === 1 ? years[0] : `${Math.min(...years)}-${Math.max(...years)}`) : 'None selected'}
+                            Years: {formatYearRange(years)}
                         </span>
                     </div>
                 </div>

@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import BhikshaTable from './BhikshaTable';
-import AddBhikshaModal from './AddBhikshaModalNew';
-import AddBhaktModal from './AddBhaktModalNew';
+import AddBhaktModal from './AddBhaktModal';
+import AddBhikshaModal from './AddBhikshaModal';
 import PrintStatusModal from './PrintStatusModal';
+import AddYearModal from './AddYearModal';
+import { AVAILABLE_YEARS, DEFAULT_SELECTED_YEARS, addYear } from '../config/years';
 
-const Dashboard = () => {
-    const [showAddBhiksha, setShowAddBhiksha] = useState(false);
-    const [showAddBhakt, setShowAddBhakt] = useState(false);
-    const [showPrintStatus, setShowPrintStatus] = useState(false);
+const Dashboard = ({ onLogout }) => {
     const [isEditMode, setIsEditMode] = useState(false); // Default to locked mode
-    const [selectedYears, setSelectedYears] = useState([2025, 2026, 2027, 2028, 2029, 2030]); // All years selected by default
+    const [showAddBhaktModal, setShowAddBhaktModal] = useState(false);
+    const [showAddBhikshaModal, setShowAddBhikshaModal] = useState(false);
+    const [showPrintStatusModal, setShowPrintStatusModal] = useState(false);
+    const [showAddYearModal, setShowAddYearModal] = useState(false);
+    const [selectedYears, setSelectedYears] = useState(DEFAULT_SELECTED_YEARS);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
+    const [availableYears, setAvailableYears] = useState([...AVAILABLE_YEARS]);
     const { isDark, toggleTheme } = useTheme();
-
-    const availableYears = [2025, 2026, 2027, 2028, 2029, 2030];
 
     const toggleYear = (year) => {
         setSelectedYears(prev => 
@@ -22,6 +24,31 @@ const Dashboard = () => {
                 ? prev.filter(y => y !== year)
                 : [...prev, year].sort()
         );
+    };
+
+    const handleAddNewYear = () => {
+        setShowAddYearModal(true);
+        setShowYearDropdown(false);
+    };
+
+    const handleAddYear = (year) => {
+        const success = addYear(year);
+        if (success) {
+            setAvailableYears([...AVAILABLE_YEARS]);
+            setSelectedYears(prev => [...prev, year].sort());
+        }
+    };
+
+    const handleAddBhiksha = () => {
+        setShowAddBhikshaModal(true);
+    };
+
+    const handleAddBhakt = () => {
+        setShowAddBhaktModal(true);
+    };
+
+    const handlePrintStatus = () => {
+        setShowPrintStatusModal(true);
     };
 
     // Close dropdown when clicking outside
@@ -99,6 +126,19 @@ const Dashboard = () => {
                                                     <span className="text-sm text-gray-700 dark:text-gray-300">{year}</span>
                                                 </label>
                                             ))}
+                                            
+                                            {/* Add New Year Button */}
+                                            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                                <button
+                                                    onClick={handleAddNewYear}
+                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                    </svg>
+                                                    <span>Add New Year</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -109,13 +149,13 @@ const Dashboard = () => {
                             {/* Action Buttons - Desktop */}
                             <div className="hidden lg:flex items-center space-x-3">
                                 <button
-                                    onClick={() => setShowAddBhiksha(true)}
+                                    onClick={handleAddBhiksha}
                                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
                                     Add New Bhiksha
                                 </button>
                                 <button
-                                    onClick={() => setShowPrintStatus(true)}
+                                    onClick={handlePrintStatus}
                                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
                                     Print Bhakt Status
@@ -127,7 +167,7 @@ const Dashboard = () => {
                                     Download Sheet
                                 </button>
                                 <button
-                                    onClick={() => setShowAddBhakt(true)}
+                                    onClick={handleAddBhakt}
                                     className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
                                     Add New Bhakt
@@ -175,6 +215,17 @@ const Dashboard = () => {
                                     </svg>
                                 )}
                             </button>
+
+                            {/* Logout Button */}
+                            <button
+                                onClick={onLogout}
+                                className="p-2 rounded-lg bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
+                                title="Logout"
+                            >
+                                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
                        
                     </div>
                 </div>
@@ -185,13 +236,13 @@ const Dashboard = () => {
                 <div className="px-4 py-3">
                     <div className="flex space-x-3 overflow-x-auto pb-2">
                         <button
-                            onClick={() => setShowAddBhiksha(true)}
+                            onClick={handleAddBhiksha}
                             className="flex-shrink-0 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
                         >
                             Add Bhiksha
                         </button>
                         <button
-                            onClick={() => setShowPrintStatus(true)}
+                            onClick={handlePrintStatus}
                             className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
                         >
                             Print Status
@@ -203,7 +254,7 @@ const Dashboard = () => {
                             Download
                         </button>
                         <button
-                            onClick={() => setShowAddBhakt(true)}
+                            onClick={handleAddBhakt}
                             className="flex-shrink-0 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
                         >
                             Add Bhakt
@@ -223,19 +274,26 @@ const Dashboard = () => {
             </main>
 
             {/* Modals */}
-            <AddBhikshaModal
-                isOpen={showAddBhiksha}
-                onClose={() => setShowAddBhiksha(false)}
+            <AddBhaktModal 
+                isOpen={showAddBhaktModal} 
+                onClose={() => setShowAddBhaktModal(false)} 
+            />
+            
+            <AddBhikshaModal 
+                isOpen={showAddBhikshaModal} 
+                onClose={() => setShowAddBhikshaModal(false)} 
+            />
+            
+            <PrintStatusModal 
+                isOpen={showPrintStatusModal} 
+                onClose={() => setShowPrintStatusModal(false)} 
             />
 
-            <AddBhaktModal
-                isOpen={showAddBhakt}
-                onClose={() => setShowAddBhakt(false)}
-            />
-
-            <PrintStatusModal
-                isOpen={showPrintStatus}
-                onClose={() => setShowPrintStatus(false)}
+            <AddYearModal 
+                isOpen={showAddYearModal} 
+                onClose={() => setShowAddYearModal(false)}
+                onAddYear={handleAddYear}
+                existingYears={availableYears}
             />
         </div>
     );

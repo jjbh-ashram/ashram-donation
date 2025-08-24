@@ -29,11 +29,12 @@ export default function handler(req, res) {
 
     // Check password
     if (password === '1234') {
-      // Generate a simple token
-      const token = Buffer.from(JSON.stringify({
+      // Generate a simple token using btoa (browser-compatible base64 encoding)
+      const tokenData = JSON.stringify({
         timestamp: Date.now(),
         verified: true
-      })).toString('base64')
+      })
+      const token = btoa(tokenData)
 
       return res.status(200).json({
         success: true,

@@ -1,129 +1,114 @@
 import { useState } from 'react';
-import Modal from './Modal';
+import SimpleModal from './SimpleModal';
 
 const PrintStatusModal = ({ isOpen, onClose }) => {
-    const [printOptions, setPrintOptions] = useState({
-        format: 'summary',
+    const [options, setOptions] = useState({
         year: '2025',
-        includeDetails: false,
-        orientation: 'portrait'
+        includeAmounts: true,
+        includeNotes: false,
+        format: 'pdf'
     });
 
-    const handlePrint = () => {
-        // Handle print logic
-        console.log('Print with options:', printOptions);
-        // Open print dialog or generate PDF
-        window.print();
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        // For now, just show the options in an alert
+        alert(`Print Status Report:\n${JSON.stringify(options, null, 2)}`);
+        
         onClose();
     };
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Print Bhakt Status">
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Print Format
-                    </label>
-                    <div className="space-y-2">
-                        <label className="flex items-center">
-                            <input
-                                type="radio"
-                                value="summary"
-                                checked={printOptions.format === 'summary'}
-                                onChange={(e) => setPrintOptions({ ...printOptions, format: e.target.value })}
-                                className="mr-2"
-                            />
-                            Summary Report
-                        </label>
-                        <label className="flex items-center">
-                            <input
-                                type="radio"
-                                value="detailed"
-                                checked={printOptions.format === 'detailed'}
-                                onChange={(e) => setPrintOptions({ ...printOptions, format: e.target.value })}
-                                className="mr-2"
-                            />
-                            Detailed Report
-                        </label>
-                        <label className="flex items-center">
-                            <input
-                                type="radio"
-                                value="monthly"
-                                checked={printOptions.format === 'monthly'}
-                                onChange={(e) => setPrintOptions({ ...printOptions, format: e.target.value })}
-                                className="mr-2"
-                            />
-                            Monthly Breakdown
-                        </label>
-                    </div>
-                </div>
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setOptions(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
 
+    return (
+        <SimpleModal isOpen={isOpen} onClose={onClose} title="Print Status Report">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Year
                     </label>
                     <select
-                        value={printOptions.year}
-                        onChange={(e) => setPrintOptions({ ...printOptions, year: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        name="year"
+                        value={options.year}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
-                        <option value="both">Both Years</option>
                     </select>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Page Orientation
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Format
                     </label>
                     <select
-                        value={printOptions.orientation}
-                        onChange={(e) => setPrintOptions({ ...printOptions, orientation: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        name="format"
+                        value={options.format}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
-                        <option value="portrait">Portrait</option>
-                        <option value="landscape">Landscape</option>
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
                     </select>
                 </div>
 
-                <div>
-                    <label className="flex items-center">
+                <div className="space-y-3">
+                    <div className="flex items-center">
                         <input
                             type="checkbox"
-                            checked={printOptions.includeDetails}
-                            onChange={(e) => setPrintOptions({ ...printOptions, includeDetails: e.target.checked })}
-                            className="mr-2"
+                            id="includeAmounts"
+                            name="includeAmounts"
+                            checked={options.includeAmounts}
+                            onChange={handleInputChange}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        Include contact details
-                    </label>
-                </div>
+                        <label htmlFor="includeAmounts" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Include donation amounts
+                        </label>
+                    </div>
 
-                <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                        <strong>Preview:</strong> {printOptions.format} format for {printOptions.year}, 
-                        {printOptions.orientation} orientation
-                        {printOptions.includeDetails && ', with contact details'}
-                    </p>
+                    <div className="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="includeNotes"
+                            name="includeNotes"
+                            checked={options.includeNotes}
+                            onChange={handleInputChange}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="includeNotes" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Include notes
+                        </label>
+                    </div>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                         Cancel
                     </button>
                     <button
-                        onClick={handlePrint}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
-                        Print / Save PDF
+                        Generate Report
                     </button>
                 </div>
-            </div>
-        </Modal>
+            </form>
+        </SimpleModal>
     );
 };
 
