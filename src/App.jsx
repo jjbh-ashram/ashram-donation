@@ -1,70 +1,48 @@
-import { useEffect, useState } from 'react';
-import { client, PROJECT_CONFIG } from './lib/appwrite';
+import { useState, useEffect } from 'react';
+import { authService } from './lib/appwrite';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
 
 function App() {
-  const [connectionStatus, setConnectionStatus] = useState('Checking...');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Test Appwrite connection
-    const testConnection = async () => {
-      try {
-        // Simple way to test if Appwrite is connected
-        await client.call('get', '/health');
-        setConnectionStatus('✅ Connected to Appwrite');
-      } catch (error) {
-        console.error('Connection error:', error);
-        setConnectionStatus('❌ Failed to connect to Appwrite');
-      }
+    // Check if user is already authenticated on app load
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setLoading(false);
     };
 
-    testConnection();
+    checkAuth();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8 text-blue-600">
-          Ashram Donation
-        </h1>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto">
-          <h2 className="text-xl font-semibold mb-4">Project Setup</h2>
-          
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Project ID:</span>
-              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                {PROJECT_CONFIG.projectId}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Project Name:</span>
-              <span className="text-sm font-medium">
-                {PROJECT_CONFIG.projectName}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Endpoint:</span>
-              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                {PROJECT_CONFIG.endpoint}
-              </span>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">Connection Status:</span>
-                <span className="text-sm font-medium">
-                  {connectionStatus}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+  const handleLogin = (token) => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
       </div>
-    </div>
-  )
+    );
+  }
+
+  return (
+    <>
+      {isAuthenticated ? (
+        <Dashboard onLogout={handleLogout} />
+      ) : (
+        <Login onLogin={handleLogin} />
+      )}
+    </>
+  );
 }
 
-export default App
+export default App;
