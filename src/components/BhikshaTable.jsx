@@ -1,10 +1,13 @@
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useState } from 'react';
 import { DEFAULT_SELECTED_YEARS, formatYearRange } from '../config/years';
+import BhaktDetailsModal from './BhaktDetailsModal';
 
 const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEARS }) => {
-    const { bhaktData, loading, error, toggleDonation } = useBhaktData();
+    const { bhaktData, loading, error, toggleDonation, refreshData } = useBhaktData();
     const [hoveredRowId, setHoveredRowId] = useState(null);
+    const [showBhaktDetails, setShowBhaktDetails] = useState(false);
+    const [selectedBhakt, setSelectedBhakt] = useState(null);
     
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -12,6 +15,24 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
     ];
 
     const years = selectedYears.sort(); // Use filtered years instead of hardcoded ones
+
+    // Handler for opening bhakt details modal
+    const handleBhaktDetails = (bhakt) => {
+        setSelectedBhakt(bhakt);
+        setShowBhaktDetails(true);
+    };
+
+    // Handler for when bhakt is updated
+    const handleBhaktUpdated = async () => {
+        // Close the modal first
+        setShowBhaktDetails(false);
+        setSelectedBhakt(null);
+        
+        // Refresh data from Supabase
+        if (refreshData) {
+            await refreshData();
+        }
+    };
 
     // Color coding for different years
     const getYearColors = (year, index) => {
@@ -109,7 +130,7 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
                         {bhaktData.map((bhakt, idx) => (
                             <tr 
                                 key={bhakt.id} 
-                                className={`transition-colors ${
+                                className={`group transition-colors ${
                                     hoveredRowId === bhakt.id 
                                         ? 'bg-gray-200 dark:bg-gray-600 shadow-sm' 
                                         : idx % 2 === 0 
@@ -129,16 +150,27 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
                                     }`} 
                                     style={{width: '200px', maxWidth: '200px', minWidth: '200px'}}
                                 >
-                                    <div className="group">
-                                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight mb-1">{bhakt.name}</div>
-                                        {bhakt.alias_name && (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mb-1">
-                                                ({bhakt.alias_name})
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight mb-1">{bhakt.name}</div>
+                                            {bhakt.alias_name && (
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mb-1">
+                                                    ({bhakt.alias_name})
+                                                </div>
+                                            )}
+                                            <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                                                ₹{bhakt.monthly_donation_amount.toLocaleString()}
                                             </div>
-                                        )}
-                                        <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                                            ₹{bhakt.monthly_donation_amount.toLocaleString()}
                                         </div>
+                                        <button
+                                            onClick={() => handleBhaktDetails(bhakt)}
+                                            className="ml-2 p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                            title="View bhakt details"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
                                 {years.map((year, yearIndex) => 
@@ -206,6 +238,14 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
                     </div>
                 </div>
             </div>
+
+            {/* Bhakt Details Modal */}
+            <BhaktDetailsModal
+                isOpen={showBhaktDetails}
+                onClose={() => setShowBhaktDetails(false)}
+                bhakt={selectedBhakt}
+                onBhaktUpdated={handleBhaktUpdated}
+            />
         </div>
     );
 };
