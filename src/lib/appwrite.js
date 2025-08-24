@@ -22,7 +22,7 @@ export const authService = {
     async verifyPassword(password) {
         try {
             const response = await functions.createExecution(
-                'verify-password', // Cloud function ID (you'll need to create this)
+                import.meta.env.VITE_APPWRITE_FUNCTION_VERIFY_PASSWORD, // Function ID from env
                 JSON.stringify({ password }),
                 false
             );
