@@ -22,10 +22,6 @@ function App() {
     setIsAuth(true);
   };
 
-  const handleLogout = () => {
-    setIsAuth(false);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -37,7 +33,7 @@ function App() {
   return (
     <>
       {isAuth ? (
-        <Dashboard onLogout={handleLogout} />
+        <Dashboard />
       ) : (
         <Login onLogin={handleLogin} />
       )}
