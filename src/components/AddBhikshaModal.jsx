@@ -162,9 +162,12 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
                                         </div>
                                         {bhakt.alias_name && (
                                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                Alias: {bhakt.alias_name}
+                                                ({bhakt.alias_name})
                                             </div>
                                         )}
+                                        <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                                            ₹{bhakt.monthly_donation_amount?.toLocaleString() || '0'}/month
+                                        </div>
                                     </button>
                                 ))
                             ) : searchTerm ? (

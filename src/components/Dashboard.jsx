@@ -3,6 +3,7 @@ import BhikshaTable from './BhikshaTable';
 import AddBhaktModal from './AddBhaktModal';
 import AddBhikshaModal from './AddBhikshaModal';
 import PrintStatusModal from './PrintStatusModal';
+import DownloadSheetModal from './DownloadSheetModal';
 import AddYearModal from './AddYearModal';
 import { AVAILABLE_YEARS, DEFAULT_SELECTED_YEARS, addYear } from '../config/years';
 
@@ -11,6 +12,7 @@ const Dashboard = () => {
     const [showAddBhaktModal, setShowAddBhaktModal] = useState(false);
     const [showAddBhikshaModal, setShowAddBhikshaModal] = useState(false);
     const [showPrintStatusModal, setShowPrintStatusModal] = useState(false);
+    const [showDownloadSheetModal, setShowDownloadSheetModal] = useState(false);
     const [showAddYearModal, setShowAddYearModal] = useState(false);
     const [selectedYears, setSelectedYears] = useState(DEFAULT_SELECTED_YEARS);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
@@ -62,8 +64,7 @@ const Dashboard = () => {
     }, []);
 
     const handleDownloadSheet = () => {
-        // Will implement CSV/Excel download
-        console.log('Download sheet');
+        setShowDownloadSheetModal(true);
     };
 
     const authMode = sessionStorage.getItem('auth_mode') || 'unknown';
@@ -257,6 +258,11 @@ const Dashboard = () => {
             <PrintStatusModal 
                 isOpen={showPrintStatusModal} 
                 onClose={() => setShowPrintStatusModal(false)} 
+            />
+
+            <DownloadSheetModal 
+                isOpen={showDownloadSheetModal} 
+                onClose={() => setShowDownloadSheetModal(false)} 
             />
 
             <AddYearModal 
