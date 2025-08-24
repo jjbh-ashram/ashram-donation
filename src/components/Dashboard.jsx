@@ -17,6 +17,7 @@ const Dashboard = () => {
     const [selectedYears, setSelectedYears] = useState(DEFAULT_SELECTED_YEARS);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
     const [availableYears, setAvailableYears] = useState([...AVAILABLE_YEARS]);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const toggleYear = (year) => {
         setSelectedYears(prev => 
@@ -65,6 +66,11 @@ const Dashboard = () => {
 
     const handleDownloadSheet = () => {
         setShowDownloadSheetModal(true);
+    };
+
+    const handleBhaktAdded = () => {
+        // Force refresh of BhikshaTable by changing the key
+        setRefreshKey(prev => prev + 1);
     };
 
     const authMode = sessionStorage.getItem('auth_mode') || 'unknown';
@@ -239,7 +245,11 @@ const Dashboard = () => {
                 {/* Container for fixed height table */}
                 <div className="h-full px-2 sm:px-4 py-6">
                     <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
-                        <BhikshaTable isEditMode={isEditMode} selectedYears={selectedYears} />
+                        <BhikshaTable 
+                            key={refreshKey} 
+                            isEditMode={isEditMode} 
+                            selectedYears={selectedYears} 
+                        />
                     </div>
                 </div>
             </main>
@@ -248,6 +258,7 @@ const Dashboard = () => {
             <AddBhaktModal 
                 isOpen={showAddBhaktModal} 
                 onClose={() => setShowAddBhaktModal(false)} 
+                onBhaktAdded={handleBhaktAdded}
             />
             
             <AddBhikshaModal 

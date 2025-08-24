@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import SimpleModal from './SimpleModal';
+import { supabase } from '../lib/supabase';
 
-const AddBhaktModal = ({ isOpen, onClose }) => {
+const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
     const [formData, setFormData] = useState({
         name: '',
         alias_name: '',
@@ -10,29 +11,70 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
         address: '',
         monthly_donation_amount: ''
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Simple validation
+        // Validation
         if (!formData.name.trim()) {
             alert('Name is required');
             return;
         }
 
-        // For now, just show the data in an alert
-        alert(`Bhakt data:\n${JSON.stringify(formData, null, 2)}`);
+        if (!formData.monthly_donation_amount || parseFloat(formData.monthly_donation_amount) <= 0) {
+            alert('Monthly donation amount is required and must be greater than 0');
+            return;
+        }
+
+        setIsLoading(true);
         
-        // Reset form and close modal
-        setFormData({
-            name: '',
-            alias_name: '',
-            phone_number: '',
-            email: '',
-            address: '',
-            monthly_donation_amount: ''
-        });
-        onClose();
+        try {
+            // Prepare data for insertion
+            const insertData = {
+                name: formData.name.trim(),
+                alias_name: formData.alias_name.trim() || null,
+                phone_number: formData.phone_number.trim() || null,
+                email: formData.email.trim() || null,
+                address: formData.address.trim() || null,
+                monthly_donation_amount: parseFloat(formData.monthly_donation_amount)
+            };
+
+            // Insert into Supabase
+            const { data, error } = await supabase
+                .from('bhakt')
+                .insert([insertData])
+                .select();
+
+            if (error) throw error;
+
+            // Success feedback
+            alert('Bhakt added successfully!');
+            
+            // Reset form
+            setFormData({
+                name: '',
+                alias_name: '',
+                phone_number: '',
+                email: '',
+                address: '',
+                monthly_donation_amount: ''
+            });
+
+            // Notify parent component to refresh data
+            if (onBhaktAdded) {
+                onBhaktAdded();
+            }
+
+            // Close modal
+            onClose();
+
+        } catch (error) {
+            console.error('Error adding bhakt:', error);
+            alert('Error adding bhakt: ' + error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleInputChange = (e) => {
@@ -57,6 +99,7 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -70,6 +113,7 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         value={formData.alias_name}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -83,6 +127,7 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         value={formData.phone_number}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -96,6 +141,7 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         value={formData.email}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -109,12 +155,13 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         onChange={handleInputChange}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        disabled={isLoading}
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Monthly Donation Amount
+                        Monthly Donation Amount *
                     </label>
                     <input
                         type="number"
@@ -124,6 +171,9 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                        disabled={isLoading}
+                        placeholder="Enter amount in rupees"
                     />
                 </div>
 
@@ -132,14 +182,20 @@ const AddBhaktModal = ({ isOpen, onClose }) => {
                         type="button"
                         onClick={onClose}
                         className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                        disabled={isLoading}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className={`px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isLoading 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                        disabled={isLoading}
                     >
-                        Add Bhakt
+                        {isLoading ? 'Adding...' : 'Add Bhakt'}
                     </button>
                 </div>
             </form>
