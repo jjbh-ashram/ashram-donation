@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SimpleModal from './SimpleModal';
+import { useBhaktData } from '../hooks/useBhaktData';
 
 const AddBhikshaModal = ({ isOpen, onClose }) => {
+    const { bhaktData, loading } = useBhaktData();
     const [formData, setFormData] = useState({
         bhaktName: '',
         month: '',
@@ -9,11 +11,61 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
         amount: '',
         notes: ''
     });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [filteredBhakts, setFilteredBhakts] = useState([]);
+    const dropdownRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
+
+    // Filter bhakts based on search term
+    useEffect(() => {
+        if (!bhaktData || bhaktData.length === 0) {
+            setFilteredBhakts([]);
+            return;
+        }
+
+        const filtered = bhaktData.filter(bhakt => {
+            const name = bhakt.name?.toLowerCase() || '';
+            const aliasName = bhakt.alias_name?.toLowerCase() || '';
+            const search = searchTerm.toLowerCase();
+            
+            return name.includes(search) || aliasName.includes(search);
+        });
+
+        setFilteredBhakts(filtered);
+    }, [bhaktData, searchTerm]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Reset form when modal opens/closes
+    useEffect(() => {
+        if (isOpen) {
+            setSearchTerm('');
+            setShowDropdown(false);
+            setFormData({
+                bhaktName: '',
+                month: '',
+                year: new Date().getFullYear(),
+                amount: '',
+                notes: ''
+            });
+        }
+    }, [isOpen]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -43,6 +95,7 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
             amount: '',
             notes: ''
         });
+        setSearchTerm('');
         onClose();
     };
 
@@ -54,22 +107,77 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
         }));
     };
 
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        setFormData(prev => ({ ...prev, bhaktName: value }));
+        setShowDropdown(true);
+    };
+
+    const handleBhaktSelect = (bhakt) => {
+        const selectedName = bhakt.alias_name || bhakt.name;
+        setFormData(prev => ({ ...prev, bhaktName: selectedName }));
+        setSearchTerm(selectedName);
+        setShowDropdown(false);
+    };
+
+    const handleSearchFocus = () => {
+        setShowDropdown(true);
+    };
+
     return (
         <SimpleModal isOpen={isOpen} onClose={onClose} title="Add Bhiksha Entry">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
+                <div className="relative" ref={dropdownRef}>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Bhakt Name *
                     </label>
                     <input
+                        ref={searchInputRef}
                         type="text"
-                        name="bhaktName"
-                        value={formData.bhaktName}
-                        onChange={handleInputChange}
-                        placeholder="Enter bhakt name"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        onFocus={handleSearchFocus}
+                        placeholder="Search bhakt name..."
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
+                        autoComplete="off"
                     />
+                    
+                    {/* Dropdown */}
+                    {showDropdown && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                            {loading ? (
+                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">Loading bhakts...</div>
+                            ) : filteredBhakts.length > 0 ? (
+                                filteredBhakts.map((bhakt) => (
+                                    <button
+                                        key={bhakt.id}
+                                        type="button"
+                                        onClick={() => handleBhaktSelect(bhakt)}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                                    >
+                                        <div className="text-gray-900 dark:text-white font-medium">
+                                            {bhakt.name}
+                                        </div>
+                                        {bhakt.alias_name && (
+                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                Alias: {bhakt.alias_name}
+                                            </div>
+                                        )}
+                                    </button>
+                                ))
+                            ) : searchTerm ? (
+                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                                    No bhakts found for "{searchTerm}"
+                                </div>
+                            ) : (
+                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                                    Type to search bhakts
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div>
