@@ -1,0 +1,14 @@
+{
+  "name": "verify-password",
+  "version": "1.0.0",
+  "description": "Password verification function",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "keywords": ["appwrite", "function", "auth"],
+  "author": "",
+  "license": "MIT"
+}
