@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import BhikshaTable from './BhikshaTable';
 import AddBhikshaModal from './AddBhikshaModalNew';
@@ -10,7 +10,31 @@ const Dashboard = () => {
     const [showAddBhakt, setShowAddBhakt] = useState(false);
     const [showPrintStatus, setShowPrintStatus] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false); // Default to locked mode
+    const [selectedYears, setSelectedYears] = useState([2025, 2026, 2027, 2028, 2029, 2030]); // All years selected by default
+    const [showYearDropdown, setShowYearDropdown] = useState(false);
     const { isDark, toggleTheme } = useTheme();
+
+    const availableYears = [2025, 2026, 2027, 2028, 2029, 2030];
+
+    const toggleYear = (year) => {
+        setSelectedYears(prev => 
+            prev.includes(year) 
+                ? prev.filter(y => y !== year)
+                : [...prev, year].sort()
+        );
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest('#yearFilterContainer')) {
+                setShowYearDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleDownloadSheet = () => {
         // Will implement CSV/Excel download
@@ -32,6 +56,53 @@ const Dashboard = () => {
                             <span className="hidden sm:inline px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs rounded-full">
                                 Auth: {authMode}
                             </span>
+                            
+                            {/* Year Filter */}
+                            <div className="relative" id="yearFilterContainer">
+                                <button
+                                    onClick={() => setShowYearDropdown(!showYearDropdown)}
+                                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    <span>Years ({selectedYears.length})</span>
+                                    <svg className={`w-4 h-4 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {showYearDropdown && (
+                                    <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+                                        <div className="p-2">
+                                            <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-600">
+                                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Years</span>
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => setSelectedYears(availableYears)}
+                                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                    >
+                                                        All
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSelectedYears([])}
+                                                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                                    >
+                                                        None
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {availableYears.map(year => (
+                                                <label key={year} className="flex items-center space-x-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedYears.includes(year)}
+                                                        onChange={() => toggleYear(year)}
+                                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                    />
+                                                    <span className="text-sm text-gray-700 dark:text-gray-300">{year}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
                         
@@ -146,7 +217,7 @@ const Dashboard = () => {
                 {/* Container for fixed height table */}
                 <div className="h-full px-2 sm:px-4 py-6">
                     <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
-                        <BhikshaTable isEditMode={isEditMode} />
+                        <BhikshaTable isEditMode={isEditMode} selectedYears={selectedYears} />
                     </div>
                 </div>
             </main>

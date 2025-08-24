@@ -1,14 +1,16 @@
 import { useBhaktData } from '../hooks/useBhaktData';
+import { useState } from 'react';
 
-const BhikshaTable = ({ isEditMode = false }) => {
+const BhikshaTable = ({ isEditMode = false, selectedYears = [2025, 2026, 2027, 2028, 2029, 2030] }) => {
     const { bhaktData, loading, error, toggleDonation } = useBhaktData();
+    const [hoveredRowId, setHoveredRowId] = useState(null);
     
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
 
-    const years = [2025, 2026, 2027, 2028, 2029, 2030];
+    const years = selectedYears.sort(); // Use filtered years instead of hardcoded ones
 
     // Color coding for different years
     const getYearColors = (year, index) => {
@@ -43,6 +45,22 @@ const BhikshaTable = ({ isEditMode = false }) => {
                     <div className="text-center">
                         <p className="text-red-600 dark:text-red-400 mb-2">Error loading data:</p>
                         <p className="text-gray-600 dark:text-gray-400">{error}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (years.length === 0) {
+        return (
+            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-gray-600 dark:text-gray-400 mb-2">No years selected</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500">Please select at least one year from the filter above</p>
                     </div>
                 </div>
             </div>
@@ -88,10 +106,28 @@ const BhikshaTable = ({ isEditMode = false }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {bhaktData.map((bhakt, idx) => (
-                            <tr key={bhakt.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                                idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'
-                            }`}>
-                                <td className="sticky left-0 bg-inherit px-3 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 z-20" style={{width: '200px', maxWidth: '200px', minWidth: '200px'}}>
+                            <tr 
+                                key={bhakt.id} 
+                                className={`transition-colors ${
+                                    hoveredRowId === bhakt.id 
+                                        ? 'bg-gray-200 dark:bg-gray-600 shadow-sm' 
+                                        : idx % 2 === 0 
+                                            ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
+                                            : 'bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }`}
+                                onMouseEnter={() => setHoveredRowId(bhakt.id)}
+                                onMouseLeave={() => setHoveredRowId(null)}
+                            >
+                                <td 
+                                    className={`sticky left-0 px-3 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 z-20 ${
+                                        hoveredRowId === bhakt.id 
+                                            ? 'bg-gray-200 dark:bg-gray-600' 
+                                            : idx % 2 === 0 
+                                                ? 'bg-white dark:bg-gray-800' 
+                                                : 'bg-gray-50 dark:bg-gray-750'
+                                    }`} 
+                                    style={{width: '200px', maxWidth: '200px', minWidth: '200px'}}
+                                >
                                     <div className="group">
                                         <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight mb-1">{bhakt.name}</div>
                                         {bhakt.alias_name && (
@@ -109,7 +145,15 @@ const BhikshaTable = ({ isEditMode = false }) => {
                                         const isDonated = bhakt.donations?.[year]?.[month] || false;
                                         const colors = getYearColors(year, yearIndex);
                                         return (
-                                            <td key={`${year}-${month}`} className={`border-r ${colors.border} p-1 text-center ${colors.bg}`} style={{width: '60px', minWidth: '60px', maxWidth: '60px'}}>
+                                            <td 
+                                                key={`${year}-${month}`} 
+                                                className={`border-r ${colors.border} p-1 text-center ${
+                                                    hoveredRowId === bhakt.id 
+                                                        ? 'bg-gray-200 dark:bg-gray-600' 
+                                                        : colors.bg
+                                                }`} 
+                                                style={{width: '60px', minWidth: '60px', maxWidth: '60px'}}
+                                            >
                                                 <button
                                                     onClick={isEditMode ? () => toggleDonation(bhakt.id, year, month) : undefined}
                                                     disabled={!isEditMode}
@@ -155,7 +199,9 @@ const BhikshaTable = ({ isEditMode = false }) => {
                         <span className={`font-medium ${isEditMode ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             Mode: {isEditMode ? 'Edit' : 'Locked'}
                         </span>
-                        <span className="font-medium">Years: 2025-2030</span>
+                        <span className="font-medium">
+                            Years: {years.length > 0 ? (years.length === 1 ? years[0] : `${Math.min(...years)}-${Math.max(...years)}`) : 'None selected'}
+                        </span>
                     </div>
                 </div>
             </div>
