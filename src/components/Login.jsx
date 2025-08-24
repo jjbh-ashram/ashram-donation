@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authService } from '../lib/appwrite';
+import { verifyPassword } from '../lib/supabase';
 
 const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
@@ -7,15 +7,17 @@ const Login = ({ onLogin }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const passwordMode = import.meta.env.VITE_PASSWORD_CHECK_MODE || 'client';
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
-        const result = await authService.verifyPassword(password);
+        const result = await verifyPassword(password);
         
         if (result.success) {
-            onLogin(result.token);
+            onLogin();
         } else {
             setError(result.error || 'Invalid password');
         }
@@ -26,6 +28,13 @@ const Login = ({ onLogin }) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center px-4">
             <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                {/* Debug Info */}
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-700 text-sm text-center">
+                        🔧 Mode: <span className="font-semibold">{passwordMode.toUpperCase()}</span> password checking
+                    </p>
+                </div>
+
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-orange-800 mb-2">

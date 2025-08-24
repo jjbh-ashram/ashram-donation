@@ -1,10 +1,12 @@
-import { authService } from '../lib/appwrite';
+import { logout } from '../lib/supabase';
 
 const Dashboard = ({ onLogout }) => {
     const handleLogout = () => {
-        authService.logout();
+        logout();
         onLogout();
     };
+
+    const authMode = sessionStorage.getItem('auth_mode') || 'unknown';
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -16,6 +18,9 @@ const Dashboard = ({ onLogout }) => {
                             <h1 className="text-xl font-semibold text-gray-900">
                                 Ashram Donation Dashboard
                             </h1>
+                            <span className="ml-3 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                Auth: {authMode}
+                            </span>
                         </div>
                         <button
                             onClick={handleLogout}
