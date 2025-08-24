@@ -5,10 +5,11 @@ import AddBhikshaModal from './AddBhikshaModalNew';
 import AddBhaktModal from './AddBhaktModalNew';
 import PrintStatusModal from './PrintStatusModal';
 
-const Dashboard = ({ onLogout }) => {
+const Dashboard = () => {
     const [showAddBhiksha, setShowAddBhiksha] = useState(false);
     const [showAddBhakt, setShowAddBhakt] = useState(false);
     const [showPrintStatus, setShowPrintStatus] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false); // Default to locked mode
     const { isDark, toggleTheme } = useTheme();
 
     const handleDownloadSheet = () => {
@@ -19,7 +20,7 @@ const Dashboard = ({ onLogout }) => {
     const authMode = sessionStorage.getItem('auth_mode') || 'unknown';
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors">
             {/* Header */}
             <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,6 +61,31 @@ const Dashboard = ({ onLogout }) => {
                                 >
                                     Add New Bhakt
                                 </button>
+                            </div>
+                            
+                            {/* Edit/Lock Toggle */}
+                            <div className="flex items-center space-x-2">
+                                <span className={`text-sm font-medium ${isEditMode ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    Locked
+                                </span>
+                                <button
+                                    onClick={() => setIsEditMode(!isEditMode)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                        isEditMode 
+                                            ? 'bg-green-600' 
+                                            : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                    title={isEditMode ? 'Switch to Locked Mode' : 'Switch to Edit Mode'}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                            isEditMode ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                                <span className={`text-sm font-medium ${isEditMode ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    Edit
+                                </span>
                             </div>
                             
                             {/* Theme Toggle */}
@@ -115,9 +141,14 @@ const Dashboard = ({ onLogout }) => {
                 </div>
             </div>
 
-            {/* Main Content - No horizontal constraints for better scrolling */}
-            <main className="w-full px-2 sm:px-4 py-6">
-                <BhikshaTable />
+            {/* Main Content - Excel-like fixed viewport */}
+            <main className="flex-1 overflow-hidden">
+                {/* Container for fixed height table */}
+                <div className="h-full px-2 sm:px-4 py-6">
+                    <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
+                        <BhikshaTable isEditMode={isEditMode} />
+                    </div>
+                </div>
             </main>
 
             {/* Modals */}
