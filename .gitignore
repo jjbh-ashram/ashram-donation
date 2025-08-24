@@ -25,3 +25,7 @@ dist-ssr
 .env
 .env
 .env
+database/create_bhakt_table.sql
+database/create_bhakt_table_simple.sql
+DATABASE_SETUP.md
+database/insert_real_bhakt_data.sql
