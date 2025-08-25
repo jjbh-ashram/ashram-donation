@@ -3,7 +3,7 @@ import SimpleModal from './SimpleModal';
 import { useBhaktData } from '../hooks/useBhaktData';
 
 const PrintStatusModal = ({ isOpen, onClose }) => {
-    const { bhaktData, loading } = useBhaktData();
+    const { bhaktData } = useBhaktData();
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;

@@ -41,7 +41,7 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
             };
 
             // Insert into Supabase
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('bhakt')
                 .insert([insertData])
                 .select();

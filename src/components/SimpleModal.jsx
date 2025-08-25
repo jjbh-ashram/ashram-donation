@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const SimpleModal = ({ isOpen, onClose, title, children }) => {
+const SimpleModal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }) => {
     // Close modal on Escape key
     useEffect(() => {
         const handleEscape = (e) => {
@@ -31,7 +31,7 @@ const SimpleModal = ({ isOpen, onClose, title, children }) => {
             />
             
             {/* Modal content */}
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+            <div className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-xl ${maxWidth} w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700`}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">

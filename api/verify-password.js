@@ -29,12 +29,8 @@ export default function handler(req, res) {
 
     // Check password
     if (password === '1234') {
-      // Generate a simple token using btoa (browser-compatible base64 encoding)
-      const tokenData = JSON.stringify({
-        timestamp: Date.now(),
-        verified: true
-      })
-      const token = btoa(tokenData)
+      // Generate a simple token (demo purposes)
+      const token = `verified_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
       return res.status(200).json({
         success: true,

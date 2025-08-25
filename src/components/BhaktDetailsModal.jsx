@@ -55,7 +55,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
             };
 
             // Update in Supabase
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('bhakt')
                 .update(updateData)
                 .eq('id', bhakt.id)

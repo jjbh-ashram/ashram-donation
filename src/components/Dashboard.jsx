@@ -5,19 +5,31 @@ import AddBhikshaModal from './AddBhikshaModal';
 import PrintStatusModal from './PrintStatusModal';
 import DownloadSheetModal from './DownloadSheetModal';
 import AddYearModal from './AddYearModal';
-import { AVAILABLE_YEARS, DEFAULT_SELECTED_YEARS, addYear } from '../config/years';
+import ViewDonationsModal from './ViewDonationsModal';
+import { useBhaktData } from '../hooks/useBhaktData';
 
 const Dashboard = () => {
-    const [isEditMode, setIsEditMode] = useState(false); // Default to locked mode
+    const { fetchAvailableYears } = useBhaktData();
     const [showAddBhaktModal, setShowAddBhaktModal] = useState(false);
     const [showAddBhikshaModal, setShowAddBhikshaModal] = useState(false);
     const [showPrintStatusModal, setShowPrintStatusModal] = useState(false);
     const [showDownloadSheetModal, setShowDownloadSheetModal] = useState(false);
     const [showAddYearModal, setShowAddYearModal] = useState(false);
-    const [selectedYears, setSelectedYears] = useState(DEFAULT_SELECTED_YEARS);
+    const [showViewDonationsModal, setShowViewDonationsModal] = useState(false);
+    const [selectedYears, setSelectedYears] = useState([]);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
-    const [availableYears, setAvailableYears] = useState([...AVAILABLE_YEARS]);
+    const [availableYears, setAvailableYears] = useState([]);
     const [refreshKey, setRefreshKey] = useState(0);
+
+    // Load available years on component mount
+    useEffect(() => {
+        const loadYears = async () => {
+            const years = await fetchAvailableYears();
+            setAvailableYears(years);
+            setSelectedYears(years); // Select all available years by default
+        };
+        loadYears();
+    }, [fetchAvailableYears]);
 
     const toggleYear = (year) => {
         setSelectedYears(prev => 
@@ -32,10 +44,11 @@ const Dashboard = () => {
         setShowYearDropdown(false);
     };
 
-    const handleAddYear = (year) => {
-        const success = addYear(year);
-        if (success) {
-            setAvailableYears([...AVAILABLE_YEARS]);
+    const handleAddYear = async (year) => {
+        // Since we're using dynamic years from database, we'll refresh the years list
+        const years = await fetchAvailableYears();
+        setAvailableYears(years);
+        if (!selectedYears.includes(year)) {
             setSelectedYears(prev => [...prev, year].sort());
         }
     };
@@ -70,6 +83,11 @@ const Dashboard = () => {
 
     const handleBhaktAdded = () => {
         // Force refresh of BhikshaTable by changing the key
+        setRefreshKey(prev => prev + 1);
+    };
+
+    const handleBhikshaAdded = () => {
+        // Force refresh of BhikshaTable by changing the key after bhiksha entry
         setRefreshKey(prev => prev + 1);
     };
 
@@ -177,31 +195,14 @@ const Dashboard = () => {
                                 >
                                     Add New Bhakt
                                 </button>
-                            </div>
-                            
-                            {/* Edit/Lock Toggle */}
-                            <div className="flex items-center space-x-2">
-                                <span className={`text-sm font-medium ${isEditMode ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400'}`}>
-                                    Locked
-                                </span>
+                                
+                                {/* View Donations Button */}
                                 <button
-                                    onClick={() => setIsEditMode(!isEditMode)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                        isEditMode 
-                                            ? 'bg-green-600' 
-                                            : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                    title={isEditMode ? 'Switch to Locked Mode' : 'Switch to Edit Mode'}
+                                    onClick={() => setShowViewDonationsModal(true)}
+                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                            isEditMode ? 'translate-x-6' : 'translate-x-1'
-                                        }`}
-                                    />
+                                    View Donations
                                 </button>
-                                <span className={`text-sm font-medium ${isEditMode ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                    Edit
-                                </span>
                             </div>
                        
                     </div>
@@ -236,6 +237,12 @@ const Dashboard = () => {
                         >
                             Add Bhakt
                         </button>
+                        <button
+                            onClick={() => setShowViewDonationsModal(true)}
+                            className="flex-shrink-0 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                        >
+                            View Donations
+                        </button>
                     </div>
                 </div>
             </div>
@@ -247,7 +254,6 @@ const Dashboard = () => {
                     <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
                         <BhikshaTable 
                             key={refreshKey} 
-                            isEditMode={isEditMode} 
                             selectedYears={selectedYears} 
                         />
                     </div>
@@ -263,7 +269,8 @@ const Dashboard = () => {
             
             <AddBhikshaModal 
                 isOpen={showAddBhikshaModal} 
-                onClose={() => setShowAddBhikshaModal(false)} 
+                onClose={() => setShowAddBhikshaModal(false)}
+                onSuccess={handleBhikshaAdded}
             />
             
             <PrintStatusModal 
@@ -281,6 +288,11 @@ const Dashboard = () => {
                 onClose={() => setShowAddYearModal(false)}
                 onAddYear={handleAddYear}
                 existingYears={availableYears}
+            />
+
+            <ViewDonationsModal 
+                isOpen={showViewDonationsModal} 
+                onClose={() => setShowViewDonationsModal(false)} 
             />
         </div>
     );

@@ -1,13 +1,21 @@
 import { useBhaktData } from '../hooks/useBhaktData';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DEFAULT_SELECTED_YEARS, formatYearRange } from '../config/years';
 import BhaktDetailsModal from './BhaktDetailsModal';
 
-const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEARS }) => {
-    const { bhaktData, loading, error, toggleDonation, refreshData } = useBhaktData();
+const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
+    const { bhaktData, loading, error, refreshData } = useBhaktData();
     const [hoveredRowId, setHoveredRowId] = useState(null);
     const [showBhaktDetails, setShowBhaktDetails] = useState(false);
     const [selectedBhakt, setSelectedBhakt] = useState(null);
+    
+    // Filter states
+    const [selectedBhakts, setSelectedBhakts] = useState([]);
+    const [showBhaktFilter, setShowBhaktFilter] = useState(false);
+    const [bhaktSearchTerm, setBhaktSearchTerm] = useState('');
+    const [filteredBhakts, setFilteredBhakts] = useState([]);
+    const filterDropdownRef = useRef(null);
+    const filterSearchRef = useRef(null);
     
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -15,6 +23,59 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
     ];
 
     const years = selectedYears.sort(); // Use filtered years instead of hardcoded ones
+
+    // Filter bhakts based on search term
+    useEffect(() => {
+        if (!bhaktData || bhaktData.length === 0) {
+            setFilteredBhakts([]);
+            return;
+        }
+
+        const filtered = bhaktData.filter(bhakt => {
+            const name = bhakt.name?.toLowerCase() || '';
+            const aliasName = bhakt.alias_name?.toLowerCase() || '';
+            const search = bhaktSearchTerm.toLowerCase();
+            
+            return name.includes(search) || aliasName.includes(search);
+        });
+
+        setFilteredBhakts(filtered);
+    }, [bhaktData, bhaktSearchTerm]);
+
+    // Close filter dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+                setShowBhaktFilter(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Filter data based on selected bhakts
+    const displayData = selectedBhakts.length > 0 
+        ? bhaktData.filter(bhakt => selectedBhakts.some(selected => selected.id === bhakt.id))
+        : bhaktData;
+
+    // Handle bhakt selection for filter
+    const toggleBhaktSelection = (bhakt) => {
+        setSelectedBhakts(prev => {
+            const isSelected = prev.some(selected => selected.id === bhakt.id);
+            if (isSelected) {
+                return prev.filter(selected => selected.id !== bhakt.id);
+            } else {
+                return [...prev, bhakt];
+            }
+        });
+    };
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSelectedBhakts([]);
+        setBhaktSearchTerm('');
+    };
 
     // Handler for opening bhakt details modal
     const handleBhaktDetails = (bhakt) => {
@@ -91,6 +152,92 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
 
     return (
         <div className="h-full flex flex-col bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
+            {/* Filter Section */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between gap-4">
+                    {/* Filter Dropdown - Left aligned */}
+                    <div className="flex items-center space-x-4">
+                        <div className="relative" ref={filterDropdownRef}>
+                            <button
+                                onClick={() => setShowBhaktFilter(!showBhaktFilter)}
+                                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                                </svg>
+                                <span>Filter Bhakts</span>
+                                <svg className={`w-4 h-4 transition-transform ${showBhaktFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            
+                            {showBhaktFilter && (
+                                <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
+                                    <div className="p-3 border-b border-gray-200 dark:border-gray-600">
+                                        <input
+                                            ref={filterSearchRef}
+                                            type="text"
+                                            placeholder="Search bhakts..."
+                                            value={bhaktSearchTerm}
+                                            onChange={(e) => setBhaktSearchTerm(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div className="max-h-64 overflow-y-auto">
+                                        {filteredBhakts.map((bhakt) => {
+                                            const isSelected = selectedBhakts.some(selected => selected.id === bhakt.id);
+                                            return (
+                                                <div
+                                                    key={bhakt.id}
+                                                    onClick={() => toggleBhaktSelection(bhakt)}
+                                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
+                                                        isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => {}} // Handled by div click
+                                                        className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            {bhakt.name}
+                                                        </div>
+                                                        {bhakt.alias_name && (
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {bhakt.alias_name}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Right side - Selected count and clear button */}
+                    <div className="flex items-center space-x-2">
+                        {selectedBhakts.length > 0 && (
+                            <>
+                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full">
+                                    {selectedBhakts.length} selected
+                                </span>
+                                <button
+                                    onClick={clearFilters}
+                                    className="px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                                >
+                                    Clear
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+            
             {/* Table Container - Excel-like scrolling with fixed header */}
             <div className="flex-1 overflow-auto">
                 <table className="table-fixed" style={{minWidth: 'max-content'}}>
@@ -127,7 +274,7 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {bhaktData.map((bhakt, idx) => (
+                        {displayData.map((bhakt, idx) => (
                             <tr 
                                 key={bhakt.id} 
                                 className={`group transition-colors ${
@@ -187,30 +334,20 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
                                                 }`} 
                                                 style={{width: '60px', minWidth: '60px', maxWidth: '60px'}}
                                             >
-                                                <button
-                                                    onClick={isEditMode ? () => toggleDonation(bhakt.id, year, month) : undefined}
-                                                    disabled={!isEditMode}
-                                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto shadow-sm ${
-                                                        !isEditMode 
-                                                            ? 'cursor-not-allowed opacity-75' 
-                                                            : 'hover:scale-105 cursor-pointer'
-                                                    } ${
+                                                <div
+                                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto shadow-sm cursor-default ${
                                                         isDonated
                                                             ? 'bg-green-500 border-green-500 text-white shadow-md'
-                                                            : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:border-green-400 dark:hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                                            : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500'
                                                     }`}
-                                                    title={
-                                                        !isEditMode 
-                                                            ? 'Locked - Switch to Edit mode to modify' 
-                                                            : `${month} ${year} - ${isDonated ? 'Donated' : 'Not donated'}`
-                                                    }
+                                                    title={`${month} ${year} - ${isDonated ? 'Paid' : 'Not paid'} (Read-only - Use Add Bhiksha Entry)`}
                                                 >
                                                     {isDonated && (
                                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                         </svg>
                                                     )}
-                                                </button>
+                                                </div>
                                             </td>
                                         );
                                     })
@@ -224,13 +361,13 @@ const BhikshaTable = ({ isEditMode = false, selectedYears = DEFAULT_SELECTED_YEA
             {/* Instructions Footer */}
             <div className="flex-shrink-0 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 transition-colors">
                 <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Total Bhakts: {bhaktData.length}</span>
+                    <span className="font-medium">Total Bhakts: {displayData.length}</span>
                     <span className="hidden sm:inline">
-                        {isEditMode ? 'Click on month boxes to mark donations' : 'Switch to Edit mode to modify donations'}
+                        Transaction-based payment tracking - Use "Add Bhiksha Entry" to record payments
                     </span>
                     <div className="flex items-center space-x-4">
-                        <span className={`font-medium ${isEditMode ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            Mode: {isEditMode ? 'Edit' : 'Locked'}
+                        <span className="font-medium text-blue-600 dark:text-blue-400">
+                            Mode: Read-Only
                         </span>
                         <span className="font-medium">
                             Years: {formatYearRange(years)}

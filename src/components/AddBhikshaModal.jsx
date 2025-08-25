@@ -2,13 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import SimpleModal from './SimpleModal';
 import { useBhaktData } from '../hooks/useBhaktData';
 
-const AddBhikshaModal = ({ isOpen, onClose }) => {
-    const { bhaktData, loading } = useBhaktData();
+const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
+    const { bhaktData, loading, addBhikshaEntryTransaction } = useBhaktData();
     const [formData, setFormData] = useState({
         bhaktName: '',
-        month: '',
-        year: new Date().getFullYear(),
         amount: '',
+        paymentDate: new Date().toISOString().split('T')[0], // Today's date
         notes: ''
     });
     const [searchTerm, setSearchTerm] = useState('');
@@ -16,11 +15,6 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
     const [filteredBhakts, setFilteredBhakts] = useState([]);
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
-
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
 
     // Filter bhakts based on search term
     useEffect(() => {
@@ -59,15 +53,14 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
             setShowDropdown(false);
             setFormData({
                 bhaktName: '',
-                month: '',
-                year: new Date().getFullYear(),
                 amount: '',
+                paymentDate: new Date().toISOString().split('T')[0],
                 notes: ''
             });
         }
     }, [isOpen]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         // Simple validation
@@ -75,28 +68,48 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
             alert('Bhakt name is required');
             return;
         }
-        if (!formData.month) {
-            alert('Month is required');
-            return;
-        }
         if (!formData.amount || formData.amount <= 0) {
             alert('Valid amount is required');
             return;
         }
+        if (!formData.paymentDate) {
+            alert('Payment date is required');
+            return;
+        }
 
-        // For now, just show the data in an alert
-        alert(`Bhiksha data:\n${JSON.stringify(formData, null, 2)}`);
-        
-        // Reset form and close modal
-        setFormData({
-            bhaktName: '',
-            month: '',
-            year: new Date().getFullYear(),
-            amount: '',
-            notes: ''
-        });
-        setSearchTerm('');
-        onClose();
+        try {
+            const result = await addBhikshaEntryTransaction(
+                formData.bhaktName,
+                formData.amount,
+                formData.paymentDate,
+                formData.notes
+            );
+
+            if (result.success) {
+                alert(result.message);
+                
+                // Reset form and close modal
+                setFormData({
+                    bhaktName: '',
+                    amount: '',
+                    paymentDate: new Date().toISOString().split('T')[0],
+                    notes: ''
+                });
+                setSearchTerm('');
+                
+                // Trigger refresh in parent component
+                if (onSuccess) {
+                    onSuccess();
+                }
+                
+                onClose();
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error submitting bhiksha entry:', error);
+            alert('An error occurred while saving the entry');
+        }
     };
 
     const handleInputChange = (e) => {
@@ -185,36 +198,15 @@ const AddBhikshaModal = ({ isOpen, onClose }) => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Month *
+                        Payment Date *
                     </label>
-                    <select
-                        name="month"
-                        value={formData.month}
+                    <input
+                        type="date"
+                        name="paymentDate"
+                        value={formData.paymentDate}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
-                    >
-                        <option value="">Select month</option>
-                        {months.map((month) => (
-                            <option key={month} value={month}>
-                                {month}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Year
-                    </label>
-                    <input
-                        type="number"
-                        name="year"
-                        value={formData.year}
-                        onChange={handleInputChange}
-                        min="2020"
-                        max="2050"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                 </div>
 
