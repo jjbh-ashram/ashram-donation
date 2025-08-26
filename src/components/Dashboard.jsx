@@ -312,9 +312,9 @@ const Dashboard = () => {
                 {/* Container for fixed height table */}
                 <div className="h-full px-2 sm:px-4 py-6">
                     {/* Activity Summary */}
-                    <ActivitySummary />
+                    {/* <ActivitySummary /> */}
                     
-                    <div className="h-full max-h-[calc(100vh-280px)] overflow-hidden">
+                    <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
                         <BhikshaTable 
                             key={refreshKey} 
                             selectedYears={selectedYears} 
