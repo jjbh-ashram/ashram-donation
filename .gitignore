@@ -29,3 +29,11 @@ database/create_bhakt_table.sql
 database/create_bhakt_table_simple.sql
 DATABASE_SETUP.md
 database/insert_real_bhakt_data.sql
+database/debug/04_performance_monitoring.sql
+database/debug/02_data_consistency_checks.sql
+.gitignore
+database/run_population_and_verify.sql
+database/debug/03_issue_resolution.sql
+.gitignore
+database/debug/README.md
+database/debug/01_structure_verification.sql
