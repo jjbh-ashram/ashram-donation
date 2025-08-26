@@ -264,6 +264,18 @@ export const useBhaktData = () => {
     // Fetch available years from monthly donations (transactions)
     const fetchAvailableYears = async () => {
         try {
+            // First try to get years from year_config table
+            const { data: yearConfig, error: yearError } = await supabase
+                .from('year_config')
+                .select('year')
+                .eq('is_active', true)
+                .order('year', { ascending: true });
+            
+            if (!yearError && yearConfig && yearConfig.length > 0) {
+                return yearConfig.map(y => y.year);
+            }
+            
+            // Fallback to dynamic calculation from transactions
             const { data: transactions, error } = await supabase
                 .from('monthly_donations')
                 .select('payment_date')

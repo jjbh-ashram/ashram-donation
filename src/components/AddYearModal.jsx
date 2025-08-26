@@ -1,39 +1,55 @@
 import { useState } from 'react';
 import SimpleModal from './SimpleModal';
+import { useYearConfig } from '../hooks/useYearConfig';
 
-const AddYearModal = ({ isOpen, onClose, onAddYear, existingYears }) => {
+const AddYearModal = ({ isOpen, onClose, onRefreshYears, existingYears }) => {
     const [newYear, setNewYear] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { addYear } = useYearConfig();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
         const year = parseInt(newYear);
         
         // Validation
         if (isNaN(year)) {
             setError('Please enter a valid number');
+            setIsLoading(false);
             return;
         }
         
         if (year < 2020 || year > 2050) {
             setError('Year must be between 2020 and 2050');
+            setIsLoading(false);
             return;
         }
         
         if (existingYears.includes(year)) {
             setError(`Year ${year} already exists`);
+            setIsLoading(false);
             return;
         }
         
-        // Call the parent function to add the year
-        onAddYear(year);
-        
-        // Reset form and close
-        setNewYear('');
-        setError('');
-        onClose();
+        try {
+            await addYear(year);
+            // Call refresh callback to update parent component
+            if (onRefreshYears) {
+                await onRefreshYears();
+            }
+            
+            // Reset form and close
+            setNewYear('');
+            setError('');
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Failed to add year');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleClose = () => {
@@ -78,15 +94,17 @@ const AddYearModal = ({ isOpen, onClose, onAddYear, existingYears }) => {
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                        disabled={isLoading}
+                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                        disabled={isLoading}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Add Year
+                        {isLoading ? 'Adding...' : 'Add Year'}
                     </button>
                 </div>
             </form>
