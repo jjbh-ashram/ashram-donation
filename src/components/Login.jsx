@@ -37,8 +37,9 @@ const Login = ({ onLogin }) => {
 
                 {/* Header */}
                 <div className="text-center mb-8">
+                    <img src="/img.jpg" alt="Logo" className="mx-auto mb-4 rounded-xl w-88 h-52" />
                     <h1 className="text-3xl font-bold text-orange-800 mb-2">
-                        जै जगतबंधु हरि
+                       जय जगतबन्धु हरि
                     </h1>
                     <div className="w-16 h-1 bg-orange-500 mx-auto rounded-full"></div>
                 </div>

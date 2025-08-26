@@ -11,7 +11,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
         phone_number: bhakt?.phone_number || '',
         email: bhakt?.email || '',
         address: bhakt?.address || '',
-        monthly_donation_amount: bhakt?.monthly_donation_amount || ''
+        monthly_donation_amount: bhakt?.monthly_donation_amount || '',
+        carry_forward_balance: bhakt?.carry_forward_balance || '',
+        last_payment_date: bhakt?.last_payment_date || '',
+        payment_status: bhakt?.payment_status || ''
     });
 
     // Update form data when bhakt prop changes
@@ -110,6 +113,24 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
     return (
         <SimpleModal isOpen={isOpen} onClose={handleClose} title={`Bhakt Details - ${bhakt.name}`}>
             <div className="space-y-4">
+                {/* Stats Section */}
+                <div className="flex flex-row gap-4 mb-2">
+                    <div className="flex-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-center">
+                        <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Carry Forward Balance</div>
+                        <div className="text-lg font-bold text-blue-900 dark:text-blue-100">₹{bhakt?.carry_forward_balance ?? 0}</div>
+                    </div>
+                    <div className="flex-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-center">
+                        <div className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">Last Payment Date</div>
+                        <div className="text-lg font-bold text-green-900 dark:text-green-100">{bhakt?.last_payment_date ? bhakt.last_payment_date : 'N/A'}</div>
+                    </div>
+                </div>
+                <div className="w-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3 text-center flex items-center justify-center mb-2">
+                    <div>
+                        <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">Payment Status</div>
+                        <div className="text-lg font-bold text-purple-900 dark:text-purple-100 whitespace-pre-line">{bhakt?.payment_status ? bhakt.payment_status : 'N/A'}</div>
+                    </div>
+                </div>
+
                 {/* Name */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
