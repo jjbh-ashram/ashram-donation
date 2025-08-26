@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export const useBhaktData = () => {
@@ -6,12 +6,12 @@ export const useBhaktData = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchBhaktData = async () => {
+    const fetchBhaktData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
-            // Fetch bhakt data with their payment summary
+            // Fetch bhakt data with their basic info
             const { data: bhaktList, error: bhaktError } = await supabase
                 .from('bhakt')
                 .select(`
@@ -30,53 +30,59 @@ export const useBhaktData = () => {
 
             if (bhaktError) throw bhaktError;
 
-            // Get payment transactions for all bhakts
-            const { data: transactions, error: transactionError } = await supabase
-                .from('monthly_donations')
+            // Get monthly sync data (our source of truth for the UI)
+            const { data: monthlySync, error: syncError } = await supabase
+                .from('monthly_sync')
                 .select('*')
-                .order('payment_date', { ascending: true });
+                .order('year', { ascending: true });
 
-            if (transactionError) throw transactionError;
+            if (syncError) throw syncError;
 
-            // Calculate dynamic years from transactions
-            const allYears = transactions.length > 0 
-                ? [...new Set(transactions.map(t => new Date(t.payment_date).getFullYear()))].sort()
+            // Calculate dynamic years from monthly_sync data
+            const allYears = monthlySync.length > 0 
+                ? [...new Set(monthlySync.map(ms => ms.year))].sort()
                 : [new Date().getFullYear()];
 
-            // Transform data to calculate month-wise status dynamically
+            // Transform data to create the payment matrix
             const transformedData = bhaktList.map(bhakt => {
                 const donations = {};
-                const bhaktTransactions = transactions.filter(t => t.bhakt_id === bhakt.id);
+                const bhaktSyncData = monthlySync.filter(ms => ms.bhakt_id === bhakt.id);
+                
+                // Generate month status for each year from monthly_sync data
+                allYears.forEach(year => {
+                    donations[year] = {};
+                    for (let month = 1; month <= 12; month++) {
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const monthName = monthNames[month - 1];
+                        
+                        // Find the sync record for this bhakt, year, month
+                        const syncRecord = bhaktSyncData.find(ms => 
+                            ms.year === year && ms.month === month
+                        );
+                        
+                        // Use sync record is_paid status, or false if no record exists
+                        const isPaid = syncRecord ? syncRecord.is_paid : false;
+                        donations[year][monthName] = isPaid;
+                    }
+                });
+
+                // Calculate summary data from monthly_sync
+                const paidMonths = bhaktSyncData.filter(ms => ms.is_paid).length;
                 const monthlyAmount = bhakt.monthly_donation_amount || 0;
-                
-                // Calculate total paid by this bhakt
-                const totalPaid = bhaktTransactions.reduce((sum, t) => sum + (t.amount_paid || 0), 0);
-                const totalAvailable = totalPaid + (bhakt.carry_forward_balance || 0);
-                
-                // Calculate how many months are covered
-                const monthsCovered = monthlyAmount > 0 ? Math.floor(totalAvailable / monthlyAmount) : 0;
-                
-                // Calculate "Paid till" status
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
+                const totalPaid = paidMonths * monthlyAmount; // Estimated from paid months
                 
                 let calculatedStatus = 'No payments';
-                if (monthsCovered > 0) {
-                    // Start from January of current year and count forward
-                    let paidTillYear = currentYear;
-                    let paidTillMonth = monthsCovered; // monthsCovered gives us the last paid month number
+                if (paidMonths > 0) {
+                    const lastPaidRecord = bhaktSyncData
+                        .filter(ms => ms.is_paid)
+                        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))[0];
                     
-                    // Handle year overflow
-                    while (paidTillMonth > 12) {
-                        paidTillMonth -= 12;
-                        paidTillYear += 1;
+                    if (lastPaidRecord) {
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        calculatedStatus = `Paid till ${monthNames[lastPaidRecord.month - 1]} ${lastPaidRecord.year}`;
                     }
-                    
-                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    calculatedStatus = `Paid till ${monthNames[paidTillMonth - 1]} ${paidTillYear}`;
-                } else if (totalAvailable > 0) {
-                    calculatedStatus = 'Partial payment';
                 }
 
                 // Use calculated status if payment_status is generic, otherwise use stored status
@@ -86,22 +92,6 @@ export const useBhaktData = () => {
                                      bhakt.payment_status === 'overdue') 
                     ? calculatedStatus 
                     : bhakt.payment_status;
-
-                // Generate month status for each year
-                allYears.forEach(year => {
-                    donations[year] = {};
-                    for (let month = 1; month <= 12; month++) {
-                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        const monthName = monthNames[month - 1];
-                        
-                        // Calculate if this month is paid based on sequential payment logic
-                        const monthsSinceStart = (year - allYears[0]) * 12 + month;
-                        const isPaid = monthsSinceStart <= monthsCovered;
-                        
-                        donations[year][monthName] = isPaid;
-                    }
-                });
 
                 return {
                     id: bhakt.id,
@@ -115,7 +105,7 @@ export const useBhaktData = () => {
                     last_payment_date: bhakt.last_payment_date,
                     payment_status: displayStatus,
                     total_paid: totalPaid,
-                    months_covered: monthsCovered,
+                    months_covered: paidMonths,
                     donations
                 };
             });
@@ -127,7 +117,7 @@ export const useBhaktData = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []); // Empty dependency array for useCallback
 
     const toggleDonation = async (bhaktId, year, month) => {
         try {
@@ -303,7 +293,7 @@ export const useBhaktData = () => {
     };
 
     // New TRUE transaction-based bhiksha entry function
-    const addBhikshaEntryTransaction = async (bhaktName, paymentAmount, paymentDate, notes) => {
+    const addBhikshaEntryTransaction = async (bhaktName, paymentAmount, paymentDate, remarks) => {
         try {
             // Find bhakt by name
             const bhakt = bhaktData.find(b => b.name === bhaktName);
@@ -359,18 +349,16 @@ export const useBhaktData = () => {
             }
 
             // Create a single transaction record for the payment
+            // Prepare auto-generated notes (separate from user remarks)
             const autoGeneratedNote = `Payment of ₹${paymentAmount}${existingBalance > 0 ? ` (including ₹${existingBalance.toFixed(2)} carry-forward)` : ''}. Covers ${monthsCovered} month(s).`;
-            
-            const finalNotes = notes && notes.trim() 
-                ? `${notes.trim()}\n---\n${autoGeneratedNote}`
-                : autoGeneratedNote;
 
             const transactionRecord = {
                 bhakt_id: bhakt.id,
                 bhakt_name: bhaktName,
                 payment_date: paymentDate,
                 amount_paid: parseFloat(paymentAmount),
-                notes: finalNotes
+                notes: autoGeneratedNote,  // Auto-generated system notes
+                remarks: remarks || null   // User-entered remarks (optional)
             };
 
             // Insert the transaction record
@@ -429,7 +417,6 @@ export const useBhaktData = () => {
         error,
         refreshData: fetchBhaktData,
         fetchAvailableYears,
-        toggleDonation,
         addNewBhakt,
         addBhikshaEntry,
         addBhikshaEntryTransaction

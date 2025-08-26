@@ -8,7 +8,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
         bhaktName: '',
         amount: '',
         paymentDate: new Date().toISOString().split('T')[0], // Today's date
-        notes: ''
+        remarks: ''
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
@@ -55,7 +55,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 bhaktName: '',
                 amount: '',
                 paymentDate: new Date().toISOString().split('T')[0],
-                notes: ''
+                remarks: ''
             });
         }
     }, [isOpen]);
@@ -80,9 +80,9 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
         try {
             const result = await addBhikshaEntryTransaction(
                 formData.bhaktName,
-                formData.amount,
+                parseFloat(formData.amount),
                 formData.paymentDate,
-                formData.notes
+                formData.remarks
             );
 
             if (result.success) {
@@ -93,7 +93,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                     bhaktName: '',
                     amount: '',
                     paymentDate: new Date().toISOString().split('T')[0],
-                    notes: ''
+                    remarks: ''
                 });
                 setSearchTerm('');
                 
@@ -229,14 +229,14 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Notes
+                        Remarks
                     </label>
                     <textarea
-                        name="notes"
-                        value={formData.notes}
+                        name="remarks"
+                        value={formData.remarks}
                         onChange={handleInputChange}
                         rows={3}
-                        placeholder="Optional notes"
+                        placeholder="Optional remarks"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                 </div>
