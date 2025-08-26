@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import SimpleModal from './SimpleModal';
+import Toast from './Toast';
 import { useBhaktData } from '../hooks/useBhaktData';
 
 const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
@@ -13,6 +14,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const [filteredBhakts, setFilteredBhakts] = useState([]);
+    const [toast, setToast] = useState(null);
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
 
@@ -65,15 +67,15 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
         
         // Simple validation
         if (!formData.bhaktName.trim()) {
-            alert('Bhakt name is required');
+            setToast({ message: 'Bhakt name is required', type: 'error' });
             return;
         }
         if (!formData.amount || formData.amount <= 0) {
-            alert('Valid amount is required');
+            setToast({ message: 'Valid amount is required', type: 'error' });
             return;
         }
         if (!formData.paymentDate) {
-            alert('Payment date is required');
+            setToast({ message: 'Payment date is required', type: 'error' });
             return;
         }
 
@@ -86,29 +88,45 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
             );
 
             if (result.success) {
-                alert(result.message);
+                // Create detailed success message
+                let successMsg = `Payment recorded successfully! `;
+                successMsg += `₹${formData.amount} on ${formData.paymentDate}. `;
                 
-                // Reset form and close modal
-                setFormData({
-                    bhaktName: '',
-                    amount: '',
-                    paymentDate: new Date().toISOString().split('T')[0],
-                    remarks: ''
-                });
-                setSearchTerm('');
-                
-                // Trigger refresh in parent component
-                if (onSuccess) {
-                    onSuccess();
+                if (result.monthsCovered) {
+                    successMsg += `Covers ${result.monthsCovered} month(s). `;
                 }
                 
-                onClose();
+                if (result.carryForward > 0) {
+                    successMsg += `Carry-forward: ₹${result.carryForward.toFixed(2)}. `;
+                }
+                
+                successMsg += `Auto-sync will assign to next unpaid months.`;
+                
+                setToast({ message: successMsg, type: 'success' });
+                
+                // Reset form and close modal after a delay
+                setTimeout(() => {
+                    setFormData({
+                        bhaktName: '',
+                        amount: '',
+                        paymentDate: new Date().toISOString().split('T')[0],
+                        remarks: ''
+                    });
+                    setSearchTerm('');
+                    
+                    // Trigger refresh in parent component
+                    if (onSuccess) {
+                        onSuccess();
+                    }
+                    
+                    onClose();
+                }, 2000);
             } else {
-                alert(`Error: ${result.error}`);
+                setToast({ message: `Error: ${result.error}`, type: 'error' });
             }
         } catch (error) {
             console.error('Error submitting bhiksha entry:', error);
-            alert('An error occurred while saving the entry');
+            setToast({ message: 'An error occurred while saving the entry. Please try again.', type: 'error' });
         }
     };
 
@@ -139,6 +157,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     };
 
     return (
+        <>
         <SimpleModal isOpen={isOpen} onClose={onClose} title="Add Bhiksha Entry">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative" ref={dropdownRef}>
@@ -258,6 +277,17 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
             </form>
         </SimpleModal>
+        
+        {/* Toast Notification */}
+        {toast && (
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+                duration={toast.type === 'success' ? 3000 : 5000}
+            />
+        )}
+        </>
     );
 };
 

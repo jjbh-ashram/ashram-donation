@@ -6,6 +6,7 @@ import PrintStatusModal from './PrintStatusModal';
 import DownloadSheetModal from './DownloadSheetModal';
 import AddYearModal from './AddYearModal';
 import ViewDonationsModal from './ViewDonationsModal';
+import ActivitySummary from './ActivitySummary';
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useYearConfig } from '../hooks/useYearConfig';
 
@@ -33,7 +34,22 @@ const Dashboard = () => {
                 .filter(year => year.is_active)
                 .map(year => year.year);
             setAvailableYears(activeYears);
-            setSelectedYears(activeYears); // Select all available years by default
+            
+            // Load selected years from localStorage or default to all active years
+            const savedSelectedYears = localStorage.getItem('selectedYears');
+            if (savedSelectedYears) {
+                try {
+                    const parsedYears = JSON.parse(savedSelectedYears);
+                    // Filter to only include years that are still available and active
+                    const validYears = parsedYears.filter(year => activeYears.includes(year));
+                    setSelectedYears(validYears.length > 0 ? validYears : activeYears);
+                } catch (error) {
+                    console.error('Error parsing saved years:', error);
+                    setSelectedYears(activeYears);
+                }
+            } else {
+                setSelectedYears(activeYears); // Select all available years by default
+            }
         };
         loadYears();
     }, []); // Remove fetchYears dependency to avoid infinite loops
@@ -49,11 +65,15 @@ const Dashboard = () => {
     };
 
     const toggleYear = (year) => {
-        setSelectedYears(prev => 
-            prev.includes(year) 
+        setSelectedYears(prev => {
+            const newSelection = prev.includes(year) 
                 ? prev.filter(y => y !== year)
-                : [...prev, year].sort()
-        );
+                : [...prev, year].sort();
+            
+            // Save to localStorage
+            localStorage.setItem('selectedYears', JSON.stringify(newSelection));
+            return newSelection;
+        });
     };
 
     const handleAddNewYear = () => {
@@ -147,13 +167,19 @@ const Dashboard = () => {
                                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Years</span>
                                                 <div className="flex space-x-2">
                                                     <button
-                                                        onClick={() => setSelectedYears(availableYears)}
+                                                        onClick={() => {
+                                                            setSelectedYears(availableYears);
+                                                            localStorage.setItem('selectedYears', JSON.stringify(availableYears));
+                                                        }}
                                                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                                     >
                                                         All
                                                     </button>
                                                     <button
-                                                        onClick={() => setSelectedYears([])}
+                                                        onClick={() => {
+                                                            setSelectedYears([]);
+                                                            localStorage.setItem('selectedYears', JSON.stringify([]));
+                                                        }}
                                                         className="text-xs text-red-600 dark:text-red-400 hover:underline"
                                                     >
                                                         None
@@ -285,7 +311,10 @@ const Dashboard = () => {
             <main className="flex-1 overflow-hidden">
                 {/* Container for fixed height table */}
                 <div className="h-full px-2 sm:px-4 py-6">
-                    <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
+                    {/* Activity Summary */}
+                    <ActivitySummary />
+                    
+                    <div className="h-full max-h-[calc(100vh-280px)] overflow-hidden">
                         <BhikshaTable 
                             key={refreshKey} 
                             selectedYears={selectedYears} 
