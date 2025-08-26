@@ -247,7 +247,7 @@ const Dashboard = () => {
                                     onClick={handleDownloadSheet}
                                     className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
-                                    Download Sheet
+                                    Download Status (All)
                                 </button>
                                 <button
                                     onClick={handleAddBhakt}

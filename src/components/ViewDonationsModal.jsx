@@ -156,12 +156,73 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
 
   const totalAmount = filteredDonations.reduce((sum, donation) => sum + parseFloat(donation.amount_paid), 0);
 
+  // PDF download logic
+  const handleDownloadPDF = async () => {
+    const jsPDF = (await import('jspdf')).default;
+    const autoTable = (await import('jspdf-autotable')).default;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+    doc.setFontSize(22);
+    doc.text('Donation History', 40, 40);
+    // Table headers
+    const headers = [
+      [
+        { content: 'Bhakt Name', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Payment Date', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Amount', styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: 'Notes', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Remarks', styles: { halign: 'left', fontStyle: 'bold' } }
+      ]
+    ];
+    // Table rows
+    const rows = sortedDonations.map(donation => [
+      donation.bhakt_name,
+      formatDate(donation.payment_date),
+      donation.amount_paid,
+      (donation.notes || '').replace(/\s+/g, ' ').trim(),
+      (donation.remarks || '').replace(/\s+/g, ' ').trim()
+    ]);
+    autoTable(doc, {
+      head: headers,
+      body: rows,
+      startY: 60,
+      margin: { left: 40, right: 40 },
+      theme: 'striped',
+      styles: {
+        fontSize: 12,
+        cellPadding: { top: 6, right: 6, bottom: 6, left: 6 },
+        overflow: 'linebreak',
+        valign: 'middle',
+        textColor: [44, 62, 80],
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 13,
+        fontStyle: 'bold',
+        halign: 'left',
+      },
+      columnStyles: {
+        0: { cellWidth: 110 }, // Bhakt Name
+        1: { cellWidth: 80 },  // Payment Date
+        2: { cellWidth: 70, halign: 'right' }, // Amount
+        3: { cellWidth: 320, overflow: 'linebreak' }, // Notes (wider, wrap)
+        4: { cellWidth: 120, overflow: 'linebreak' }, // Remarks (wrap)
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      didDrawCell: function(data) {
+        // Optionally, you can add custom logic for cell rendering here
+      }
+    });
+    doc.save('donation-history.pdf');
+  };
+
   return (
     <SimpleModal
       isOpen={isOpen}
       onClose={onClose}
       title="Donation History"
       maxWidth="max-w-7xl"
+      
     >
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -264,6 +325,13 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
             >
               {loading ? 'Refreshing...' : 'Refresh'}
             </button>
+            {/* <button
+          onClick={handleDownloadPDF}
+          className="px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg transition-colors"
+          title="Download PDF"
+        >
+          Download PDF
+        </button> */}
           </div>
         </div>
 
