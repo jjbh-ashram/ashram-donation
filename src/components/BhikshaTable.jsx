@@ -1,10 +1,9 @@
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useState, useEffect, useRef } from 'react';
-import { DEFAULT_SELECTED_YEARS, formatYearRange } from '../config/years';
 import BhaktDetailsModal from './BhaktDetailsModal';
 import { useEditMode } from '../contexts/EditModeContext';
 
-const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
+const BhikshaTable = ({ selectedYears }) => {
     const { bhaktData, loading, error, refreshData } = useBhaktData();
     const { 
         isEditMode, 
@@ -483,7 +482,7 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                             {hasUnsavedChanges && ` (${changesCount} unsaved)`}
                         </span>
                         <span className="font-medium">
-                            Years: {formatYearRange(years)}
+                            Years: {years.length > 0 ? `${Math.min(...years)}${years.length > 1 ? ' - ' + Math.max(...years) : ''}` : 'None'}
                         </span>
                     </div>
                 </div>
