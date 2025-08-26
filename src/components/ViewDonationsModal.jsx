@@ -82,7 +82,8 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
   const filteredDonations = donations.filter(donation => {
     // Text search filter
     const matchesText = donation.bhakt_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      donation.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+      donation.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      donation.remarks?.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Date range filter
     const donationDate = new Date(donation.payment_date);
@@ -155,12 +156,73 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
 
   const totalAmount = filteredDonations.reduce((sum, donation) => sum + parseFloat(donation.amount_paid), 0);
 
+  // PDF download logic
+  const handleDownloadPDF = async () => {
+    const jsPDF = (await import('jspdf')).default;
+    const autoTable = (await import('jspdf-autotable')).default;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'A4' });
+    doc.setFontSize(22);
+    doc.text('Donation History', 40, 40);
+    // Table headers
+    const headers = [
+      [
+        { content: 'Bhakt Name', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Payment Date', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Amount', styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: 'Notes', styles: { halign: 'left', fontStyle: 'bold' } },
+        { content: 'Remarks', styles: { halign: 'left', fontStyle: 'bold' } }
+      ]
+    ];
+    // Table rows
+    const rows = sortedDonations.map(donation => [
+      donation.bhakt_name,
+      formatDate(donation.payment_date),
+      donation.amount_paid,
+      (donation.notes || '').replace(/\s+/g, ' ').trim(),
+      (donation.remarks || '').replace(/\s+/g, ' ').trim()
+    ]);
+    autoTable(doc, {
+      head: headers,
+      body: rows,
+      startY: 60,
+      margin: { left: 40, right: 40 },
+      theme: 'striped',
+      styles: {
+        fontSize: 12,
+        cellPadding: { top: 6, right: 6, bottom: 6, left: 6 },
+        overflow: 'linebreak',
+        valign: 'middle',
+        textColor: [44, 62, 80],
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 13,
+        fontStyle: 'bold',
+        halign: 'left',
+      },
+      columnStyles: {
+        0: { cellWidth: 110 }, // Bhakt Name
+        1: { cellWidth: 80 },  // Payment Date
+        2: { cellWidth: 70, halign: 'right' }, // Amount
+        3: { cellWidth: 320, overflow: 'linebreak' }, // Notes (wider, wrap)
+        4: { cellWidth: 120, overflow: 'linebreak' }, // Remarks (wrap)
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      didDrawCell: function(data) {
+        // Optionally, you can add custom logic for cell rendering here
+      }
+    });
+    doc.save('donation-history.pdf');
+  };
+
   return (
     <SimpleModal
       isOpen={isOpen}
       onClose={onClose}
       title="Donation History"
-      maxWidth="max-w-6xl"
+      maxWidth="max-w-7xl"
+      
     >
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -191,7 +253,7 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
             <input
               ref={filterSearchRef}
               type="text"
-              placeholder="Search by bhakt name or notes..."
+              placeholder="Search by bhakt name, notes, or remarks..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -263,6 +325,13 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
             >
               {loading ? 'Refreshing...' : 'Refresh'}
             </button>
+            {/* <button
+          onClick={handleDownloadPDF}
+          className="px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg transition-colors"
+          title="Download PDF"
+        >
+          Download PDF
+        </button> */}
           </div>
         </div>
 
@@ -311,12 +380,13 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                   </div>
                 </th>
                 <th className="px-6 py-3">Notes</th>
+                <th className="px-6 py-3">Remarks</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center">
+                  <td colSpan="5" className="px-6 py-8 text-center">
                     <div className="flex items-center justify-center">
                       <svg className="w-6 h-6 mr-3 -ml-1 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -328,7 +398,7 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                 </tr>
               ) : paginatedDonations.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     {searchTerm ? 'No donations found matching your search.' : 'No donations found.'}
                   </td>
                 </tr>
@@ -344,11 +414,26 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                     <td className="px-6 py-4 font-semibold text-green-600 dark:text-green-400">
                       {formatCurrency(donation.amount_paid)}
                     </td>
-                    <td className="px-6 py-4 max-w-xs">
+                    <td className="px-6 py-4 max-w-sm">
                       {donation.notes && (
-                        <div className="text-sm text-gray-600 dark:text-gray-300 truncate" title={donation.notes}>
-                          {donation.notes}
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <div className="font-medium text-xs text-gray-500 dark:text-gray-400 mb-1">System Notes:</div>
+                          <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded text-xs leading-relaxed overflow-hidden">
+                            {donation.notes}
+                          </div>
                         </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 max-w-sm">
+                      {donation.remarks ? (
+                        <div className="text-sm text-blue-600 dark:text-blue-400">
+                          <div className="font-medium text-xs text-blue-500 dark:text-blue-400 mb-1">User Remarks:</div>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs leading-relaxed overflow-hidden">
+                            {donation.remarks}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 dark:text-gray-500 italic">No remarks</div>
                       )}
                     </td>
                   </tr>

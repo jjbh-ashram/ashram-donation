@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { isAuthenticated } from './lib/supabase';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import { EditModeProvider } from './contexts/EditModeContext';
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -31,13 +32,13 @@ function App() {
   }
 
   return (
-    <>
+    <EditModeProvider>
       {isAuth ? (
         <Dashboard />
       ) : (
         <Login onLogin={handleLogin} />
       )}
-    </>
+    </EditModeProvider>
   );
 }
 

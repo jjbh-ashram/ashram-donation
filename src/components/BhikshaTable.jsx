@@ -1,10 +1,22 @@
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useState, useEffect, useRef } from 'react';
-import { DEFAULT_SELECTED_YEARS, formatYearRange } from '../config/years';
 import BhaktDetailsModal from './BhaktDetailsModal';
+import { useEditMode } from '../contexts/EditModeContext';
 
-const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
+const BhikshaTable = ({ selectedYears }) => {
     const { bhaktData, loading, error, refreshData } = useBhaktData();
+    const { 
+        isEditMode, 
+        hasUnsavedChanges, 
+        saving,
+        toggleEditMode, 
+        updateEditData, 
+        saveChanges, 
+        getEditValue, 
+        isCellModified,
+        changesCount,
+        setDataRefreshCallback 
+    } = useEditMode();
     const [hoveredRowId, setHoveredRowId] = useState(null);
     const [showBhaktDetails, setShowBhaktDetails] = useState(false);
     const [selectedBhakt, setSelectedBhakt] = useState(null);
@@ -23,6 +35,11 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
     ];
 
     const years = selectedYears.sort(); // Use filtered years instead of hardcoded ones
+
+    // Register data refresh callback for edit mode
+    useEffect(() => {
+        setDataRefreshCallback(refreshData);
+    }, [refreshData, setDataRefreshCallback]);
 
     // Filter bhakts based on search term
     useEffect(() => {
@@ -75,6 +92,18 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
     const clearFilters = () => {
         setSelectedBhakts([]);
         setBhaktSearchTerm('');
+    };
+
+    // Handle cell click in edit mode
+    const handleCellClick = (bhakt, year, month) => {
+        if (!isEditMode) return;
+        
+        // Convert month name to number (Jan=1, Feb=2, etc.)
+        const monthNumber = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
+        
+        const currentValue = getEditValue(bhakt.id, year, monthNumber, 'is_paid', bhakt.donations?.[year]?.[month] || false);
+        updateEditData(bhakt.id, year, monthNumber, 'is_paid', !currentValue);
     };
 
     // Handler for opening bhakt details modal
@@ -156,7 +185,7 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between gap-4">
                     {/* Filter Dropdown - Left aligned */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
                         <div className="relative" ref={filterDropdownRef}>
                             <button
                                 onClick={() => setShowBhaktFilter(!showBhaktFilter)}
@@ -170,6 +199,19 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
+                        
+                        {/* Clear Button - Right next to Filter */}
+                        {selectedBhakts.length > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className="flex items-center space-x-1 px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Clear</span>
+                            </button>
+                        )}
                             
                             {showBhaktFilter && (
                                 <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
@@ -219,20 +261,63 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                         </div>
                     </div>
                     
-                    {/* Right side - Selected count and clear button */}
+                    {/* Right side - Edit controls and selected count */}
                     <div className="flex items-center space-x-2">
+                        {/* Edit Mode Toggle */}
+                        <button
+                            onClick={toggleEditMode}
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                isEditMode
+                                    ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-800'
+                                    : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
+                            }`}
+                            disabled={saving}
+                        >
+                            {isEditMode ? (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    <span>Exit Edit</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span>Edit Mode</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* Save Button - Only visible in edit mode with changes */}
+                        {isEditMode && hasUnsavedChanges && (
+                            <button
+                                onClick={saveChanges}
+                                disabled={saving}
+                                className="flex items-center space-x-2 px-3 py-2 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {saving ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Save ({changesCount})</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        {/* Selected count */}
                         {selectedBhakts.length > 0 && (
-                            <>
-                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full">
-                                    {selectedBhakts.length} selected
-                                </span>
-                                <button
-                                    onClick={clearFilters}
-                                    className="px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                                >
-                                    Clear
-                                </button>
-                            </>
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full">
+                                {selectedBhakts.length} selected
+                            </span>
                         )}
                     </div>
                 </div>
@@ -295,7 +380,7 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                                                 ? 'bg-white dark:bg-gray-800' 
                                                 : 'bg-gray-50 dark:bg-gray-750'
                                     }`} 
-                                    style={{width: '200px', maxWidth: '200px', minWidth: '200px'}}
+                                    style={{width: '250px', maxWidth: '250px', minWidth: '250px'}}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
@@ -322,8 +407,15 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                                 </td>
                                 {years.map((year, yearIndex) => 
                                     months.map(month => {
-                                        const isDonated = bhakt.donations?.[year]?.[month] || false;
+                                        const monthNumber = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
+                                        const originalValue = bhakt.donations?.[year]?.[month] || false;
+                                        const isDonated = isEditMode 
+                                            ? getEditValue(bhakt.id, year, monthNumber, 'is_paid', originalValue)
+                                            : originalValue;
+                                        const isModified = isCellModified(bhakt.id, year, monthNumber, 'is_paid');
                                         const colors = getYearColors(year, yearIndex);
+                                        
                                         return (
                                             <td 
                                                 key={`${year}-${month}`} 
@@ -335,17 +427,29 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                                                 style={{width: '60px', minWidth: '60px', maxWidth: '60px'}}
                                             >
                                                 <div
-                                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto shadow-sm cursor-default ${
+                                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto shadow-sm relative ${
+                                                        isEditMode ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+                                                    } ${
                                                         isDonated
                                                             ? 'bg-green-500 border-green-500 text-white shadow-md'
                                                             : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500'
+                                                    } ${
+                                                        isModified ? 'ring-2 ring-orange-400 ring-offset-1' : ''
                                                     }`}
-                                                    title={`${month} ${year} - ${isDonated ? 'Paid' : 'Not paid'} (Read-only - Use Add Bhiksha Entry)`}
+                                                    title={isEditMode 
+                                                        ? `${month} ${year} - Click to ${isDonated ? 'mark as unpaid' : 'mark as paid'}${isModified ? ' (Modified)' : ''}`
+                                                        : `${month} ${year} - ${isDonated ? 'Paid' : 'Not paid'} (Read-only - Use Add Bhiksha Entry)`
+                                                    }
+                                                    onClick={() => handleCellClick(bhakt, year, month)}
                                                 >
                                                     {isDonated && (
                                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                         </svg>
+                                                    )}
+                                                    {/* Modified indicator */}
+                                                    {isModified && (
+                                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
                                                     )}
                                                 </div>
                                             </td>
@@ -363,14 +467,22 @@ const BhikshaTable = ({ selectedYears = DEFAULT_SELECTED_YEARS }) => {
                 <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Total Bhakts: {displayData.length}</span>
                     <span className="hidden sm:inline">
-                        Transaction-based payment tracking - Use "Add Bhiksha Entry" to record payments
+                        {isEditMode 
+                            ? 'Edit Mode: Click cells to toggle payment status - Don\'t forget to save!'
+                            : 'Transaction-based payment tracking - Use "Add Bhiksha Entry" to record payments'
+                        }
                     </span>
                     <div className="flex items-center space-x-4">
-                        <span className="font-medium text-blue-600 dark:text-blue-400">
-                            Mode: Read-Only
+                        <span className={`font-medium ${
+                            isEditMode 
+                                ? 'text-orange-600 dark:text-orange-400' 
+                                : 'text-blue-600 dark:text-blue-400'
+                        }`}>
+                            Mode: {isEditMode ? 'Edit' : 'Read-Only'}
+                            {hasUnsavedChanges && ` (${changesCount} unsaved)`}
                         </span>
                         <span className="font-medium">
-                            Years: {formatYearRange(years)}
+                            Years: {years.length > 0 ? `${Math.min(...years)}${years.length > 1 ? ' - ' + Math.max(...years) : ''}` : 'None'}
                         </span>
                     </div>
                 </div>

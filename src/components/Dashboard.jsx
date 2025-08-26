@@ -6,10 +6,13 @@ import PrintStatusModal from './PrintStatusModal';
 import DownloadSheetModal from './DownloadSheetModal';
 import AddYearModal from './AddYearModal';
 import ViewDonationsModal from './ViewDonationsModal';
+import ActivitySummary from './ActivitySummary';
 import { useBhaktData } from '../hooks/useBhaktData';
+import { useYearConfig } from '../hooks/useYearConfig';
 
 const Dashboard = () => {
     const { fetchAvailableYears } = useBhaktData();
+    const { fetchYears, populateMonthlySync } = useYearConfig();
     const [showAddBhaktModal, setShowAddBhaktModal] = useState(false);
     const [showAddBhikshaModal, setShowAddBhikshaModal] = useState(false);
     const [showPrintStatusModal, setShowPrintStatusModal] = useState(false);
@@ -20,23 +23,57 @@ const Dashboard = () => {
     const [showYearDropdown, setShowYearDropdown] = useState(false);
     const [availableYears, setAvailableYears] = useState([]);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [syncLoading, setSyncLoading] = useState(false);
 
     // Load available years on component mount
     useEffect(() => {
         const loadYears = async () => {
-            const years = await fetchAvailableYears();
-            setAvailableYears(years);
-            setSelectedYears(years); // Select all available years by default
+            const years = await fetchYears();
+            // Filter only active years for the display
+            const activeYears = years
+                .filter(year => year.is_active)
+                .map(year => year.year);
+            setAvailableYears(activeYears);
+            
+            // Load selected years from localStorage or default to all active years
+            const savedSelectedYears = localStorage.getItem('selectedYears');
+            if (savedSelectedYears) {
+                try {
+                    const parsedYears = JSON.parse(savedSelectedYears);
+                    // Filter to only include years that are still available and active
+                    const validYears = parsedYears.filter(year => activeYears.includes(year));
+                    setSelectedYears(validYears.length > 0 ? validYears : activeYears);
+                } catch (error) {
+                    console.error('Error parsing saved years:', error);
+                    setSelectedYears(activeYears);
+                }
+            } else {
+                setSelectedYears(activeYears); // Select all available years by default
+            }
         };
         loadYears();
-    }, [fetchAvailableYears]);
+    }, []); // Remove fetchYears dependency to avoid infinite loops
+
+    const handleRefreshYears = async () => {
+        const years = await fetchYears();
+        const activeYears = years
+            .filter(year => year.is_active)
+            .map(year => year.year);
+        setAvailableYears(activeYears);
+        setSelectedYears(activeYears);
+        setRefreshKey(prev => prev + 1); // Trigger refresh of other components
+    };
 
     const toggleYear = (year) => {
-        setSelectedYears(prev => 
-            prev.includes(year) 
+        setSelectedYears(prev => {
+            const newSelection = prev.includes(year) 
                 ? prev.filter(y => y !== year)
-                : [...prev, year].sort()
-        );
+                : [...prev, year].sort();
+            
+            // Save to localStorage
+            localStorage.setItem('selectedYears', JSON.stringify(newSelection));
+            return newSelection;
+        });
     };
 
     const handleAddNewYear = () => {
@@ -44,12 +81,17 @@ const Dashboard = () => {
         setShowYearDropdown(false);
     };
 
-    const handleAddYear = async (year) => {
-        // Since we're using dynamic years from database, we'll refresh the years list
-        const years = await fetchAvailableYears();
-        setAvailableYears(years);
-        if (!selectedYears.includes(year)) {
-            setSelectedYears(prev => [...prev, year].sort());
+    const handleSyncMonthlyData = async () => {
+        try {
+            setSyncLoading(true);
+            await populateMonthlySync();
+            await handleRefreshYears(); // Refresh the UI after sync
+            alert('Monthly sync data has been populated successfully!');
+        } catch (error) {
+            console.error('Error syncing monthly data:', error);
+            alert('Error syncing monthly data: ' + error.message);
+        } finally {
+            setSyncLoading(false);
         }
     };
 
@@ -125,13 +167,19 @@ const Dashboard = () => {
                                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Years</span>
                                                 <div className="flex space-x-2">
                                                     <button
-                                                        onClick={() => setSelectedYears(availableYears)}
+                                                        onClick={() => {
+                                                            setSelectedYears(availableYears);
+                                                            localStorage.setItem('selectedYears', JSON.stringify(availableYears));
+                                                        }}
                                                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                                     >
                                                         All
                                                     </button>
                                                     <button
-                                                        onClick={() => setSelectedYears([])}
+                                                        onClick={() => {
+                                                            setSelectedYears([]);
+                                                            localStorage.setItem('selectedYears', JSON.stringify([]));
+                                                        }}
                                                         className="text-xs text-red-600 dark:text-red-400 hover:underline"
                                                     >
                                                         None
@@ -151,7 +199,7 @@ const Dashboard = () => {
                                             ))}
                                             
                                             {/* Add New Year Button */}
-                                            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600 space-y-2">
                                                 <button
                                                     onClick={handleAddNewYear}
                                                     className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
@@ -160,6 +208,18 @@ const Dashboard = () => {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                                     </svg>
                                                     <span>Add New Year</span>
+                                                </button>
+                                                
+                                                {/* Sync Monthly Data Button */}
+                                                <button
+                                                    onClick={handleSyncMonthlyData}
+                                                    disabled={syncLoading}
+                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    <span>{syncLoading ? 'Syncing...' : 'Sync Monthly Data'}</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -187,7 +247,7 @@ const Dashboard = () => {
                                     onClick={handleDownloadSheet}
                                     className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200"
                                 >
-                                    Download Sheet
+                                    Download Status (All)
                                 </button>
                                 <button
                                     onClick={handleAddBhakt}
@@ -251,6 +311,9 @@ const Dashboard = () => {
             <main className="flex-1 overflow-hidden">
                 {/* Container for fixed height table */}
                 <div className="h-full px-2 sm:px-4 py-6">
+                    {/* Activity Summary */}
+                    {/* <ActivitySummary /> */}
+                    
                     <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
                         <BhikshaTable 
                             key={refreshKey} 
@@ -286,7 +349,7 @@ const Dashboard = () => {
             <AddYearModal 
                 isOpen={showAddYearModal} 
                 onClose={() => setShowAddYearModal(false)}
-                onAddYear={handleAddYear}
+                onRefreshYears={handleRefreshYears}
                 existingYears={availableYears}
             />
 
