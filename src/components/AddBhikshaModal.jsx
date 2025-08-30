@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import SimpleModal from './SimpleModal';
 import Toast from './Toast';
 import { useBhaktData } from '../hooks/useBhaktData';
+import RecieptPdf from './RecieptPdf';
 
 const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     const { bhaktData, loading, addBhikshaEntryTransaction } = useBhaktData();
@@ -15,6 +16,11 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [filteredBhakts, setFilteredBhakts] = useState([]);
     const [toast, setToast] = useState(null);
+    const [showStatus, setShowStatus] = useState(false);
+    const [lastSubmittedName, setLastSubmittedName] = useState('');
+    const [showPDF, setShowPDF] = useState(false);
+    const [generatedData, setGeneratedData] = useState(null);
+    
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
 
@@ -59,6 +65,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 paymentDate: new Date().toISOString().split('T')[0],
                 remarks: ''
             });
+            setShowStatus(false);
         }
     }, [isOpen]);
 
@@ -106,7 +113,38 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 
                 // Reset form and close modal after a delay
                 setTimeout(() => {
-                    setFormData({
+                        // capture submitted name before clearing
+                        setLastSubmittedName(formData.bhaktName);
+
+                        // prepare receipt / generated data for actions (print/share/whatsapp/email)
+                        try {
+                            const selectedBhakt = (bhaktData || []).find(b => (b.name === formData.bhaktName) || (b.alias_name === formData.bhaktName));
+                            const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+                            const fmtNumber = (n) => (n == null ? 0 : n).toLocaleString();
+                            const fmtCurrency = (v) => {
+                                if (v == null || v === '') return '₹0';
+                                return `₹${Number(v).toLocaleString('en-IN')}`;
+                            };
+
+                            const receipt = {
+                                name: selectedBhakt?.name || formData.bhaktName,
+                                monthly: selectedBhakt?.monthly_donation_amount || 0,
+                                lastPayment: selectedBhakt?.last_payment_date ? fmtDate(selectedBhakt.last_payment_date) : 'N/A',
+                                balance: selectedBhakt?.carry_forward_balance || 0,
+                                status: selectedBhakt?.payment_status || 'N/A',
+                                phone: selectedBhakt?.phone || selectedBhakt?.phone_number || '',
+                                email: selectedBhakt?.email || ''
+                            };
+
+                            const receiptText =
+`🧾 *Donation Receipt*\n\n*Name:* ${receipt.name}\n*Monthly Donation:* ₹${fmtNumber(receipt.monthly)}\n*Last Payment Date:* ${receipt.lastPayment}\n*Extra Balance:* ₹${fmtNumber(receipt.balance)}\n*Status:* ${receipt.status}\n`;
+
+                            setGeneratedData({ receipt, receiptText });
+                        } catch (err) {
+                            console.warn('Could not build generatedData', err);
+                        }
+
+                        setFormData({
                         bhaktName: '',
                         amount: '',
                         paymentDate: new Date().toISOString().split('T')[0],
@@ -116,11 +154,14 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                     
                     // Trigger refresh in parent component
                     if (onSuccess) {
-                        onSuccess();
+                        onSuccess();   
                     }
                     
                     onClose();
+                    
+                    setShowStatus(true);
                 }, 2000);
+                
             } else {
                 setToast({ message: `Error: ${result.error}`, type: 'error' });
             }
@@ -154,6 +195,39 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
 
     const handleSearchFocus = () => {
         setShowDropdown(true);
+    };
+
+    // Step 2: Action buttons
+    const handleAction = (actionType) => {
+        if (!generatedData || !generatedData.receiptText) return;
+        if (actionType === 'Share') {
+            if (navigator.share) {
+                navigator.share({ text: generatedData.receiptText });
+            } else {
+                alert('Share not supported on this device.');
+            }
+            setShowPDF(true);
+        } else if (actionType === 'WhatsApp') {
+            const phone = generatedData.receipt.phone;
+            if (phone) {
+                const url = `https://wa.me/${phone}?text=${encodeURIComponent(generatedData.receiptText)}`;
+                window.open(url, '_blank');
+            }
+        } else if (actionType === 'Email') {
+            const email = generatedData.receipt.email;
+            if (email) {
+                const subject = encodeURIComponent('Donation Receipt');
+                const body = encodeURIComponent(generatedData.receiptText);
+                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+            }
+        } else if (actionType === 'Print') {
+            // Print the receipt
+            // const printWindow = window.open('', '_blank');
+            // printWindow.document.write(`<pre style='font-size:1.2em'>${generatedData.receiptText.replace(/\n/g, '<br>')}</pre>`);
+            // printWindow.document.close();
+            // printWindow.print();
+            setShowPDF(true);
+        }
     };
 
     return (
@@ -277,7 +351,132 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
             </form>
         </SimpleModal>
+
+//~~ Traditional PrintStatus Modal - Data showing and buttons
+        {/* {showStatus && (
+            <SimpleModal isOpen={showStatus} onClose={() => setShowStatus(false)} title="Bhakt Status">
+                <div className="p-4 rounded-lg">
+                    
+                    {(() => {
+                        const bhakt = (bhaktData || []).find(b => {
+                            const name = b.name || '';
+                            const alias = b.alias_name || '';
+                            return name === lastSubmittedName || alias === lastSubmittedName;
+                        });
+                        {console.log("Checkeing", bhaktData, lastSubmittedName, bhakt)}
+                        const fmtDate = (d) => {
+                            if (!d) return 'N/A';
+                            try { return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }
+                        };
+                        const fmtCurrency = (v) => {
+                            if (v == null || v === '') return 'N/A';
+                            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(v);
+                        };
+
+                        if (!bhakt) {
+                            return <div className="mt-3 text-sm text-gray-600">Could not find bhakt details for "{lastSubmittedName}"</div>;
+                        }
+
+
+                        return (
+                            <>
+                            <div className="w-full max-w-md">
+                                    <div className="text-lg font-bold mb-4 text-center">🧾Payment Receipt</div>
+                                    <div className="mb-2"><span className="font-semibold">Name:</span> {bhakt.name}</div>
+                                    <div className="mb-2"><span className="font-semibold">Monthly Donation:</span> <span className="text-green-600 dark:text-green-400">₹{bhakt.monthly_donation_amount}</span></div>
+                                    <div className="mb-2"><span className="font-semibold">Last Payment Date:</span> {fmtDate(bhakt.last_payment_date)}</div>
+                                    <div className="mb-2"><span className="font-semibold">Extra Balance:</span> <span className="text-blue-600 dark:text-blue-400">{fmtCurrency(bhakt.carry_forward_balance)}</span></div>
+                                    <div className="mb-2"><span className="font-semibold">Current Status:</span> <span className="font-bold text-purple-700 dark:text-purple-400">{bhakt.payment_status || 'N/A'}</span></div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 pt-6">
+                                    
+                            <button
+                                type="button"
+                                onClick={() => handleAction('Print')}
+                                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                disabled={!!generatedData?.error}
+                            >
+                                Print PDF
+                            </button>
+                           
+                            <button
+                                type="button"
+                                onClick={() => handleAction('Share')}
+                                className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                                disabled={!!generatedData?.error}
+                            >
+                                Share
+                            </button>
+                            
+                            {bhakt?.phone && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleAction('WhatsApp')}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                >
+                                    WhatsApp
+                                </button>
+                            )}
+                            
+                            {bhakt?.email && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleAction('Email')}
+                                    className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    Email
+                                </button>
+                            )}
+                            
+                        </div>
+                        </>
+                        )
+                    })()}
+
+                        
+                  
+                </div>
+            </SimpleModal>
+        )} */}
+ 
+        {showStatus && (
+            <SimpleModal isOpen={showStatus} onClose={() => setShowStatus(false)} title="Bhakt Status" maxWidth='max-w-xl'>
+                <div className="p-4 rounded-lg"> 
+                    {(() => {
+                        const bhakt = (bhaktData || []).find(b => {
+                            const name = b.name || '';
+                            const alias = b.alias_name || '';
+                            return name === lastSubmittedName || alias === lastSubmittedName;
+                        });
+                        console.log("Checking", bhaktData, lastSubmittedName, bhakt);
+                        const fmtDate = (d) => {
+                            if (!d) return 'N/A';
+                            try { return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }
+                        };
+                        const fmtCurrency = (v) => {
+                            if (v == null || v === '') return 'N/A';
+                            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(v);
+                        };
+
+                        if (!bhakt) {
+                            return <div className="mt-3 text-sm text-gray-600">Could not find bhakt details for "{lastSubmittedName}"</div>;
+                        }
+
+                        return (
+                            <RecieptPdf
+                                name={bhakt.name}
+                                monthlyDonation={bhakt.monthly_donation_amount}
+                                lastPaymentDate={bhakt.last_payment_date}
+                                extraBalance={bhakt.carry_forward_balance}
+                                currentStatus={bhakt.payment_status}
+                            />
+                        );
+                    })()}
+                </div>
+            </SimpleModal>
+        )}
         
+
         {/* Toast Notification */}
         {toast && (
             <Toast
