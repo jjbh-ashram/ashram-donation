@@ -57,7 +57,7 @@ pdf.rect(xOffset - 12, yOffset - 12, targetWidth + 24, targetHeight + 24, "S");
         minHeight: "400px",
         width: "500px",
         margin: "2rem auto",
-        background: "#ffffffff",
+        background: "#f3e3c6ff",
         borderRadius: "16px",
         boxShadow: "0 4px 12px #c0b28026",
         fontFamily: "'Mukti Narrow', sans-serif",

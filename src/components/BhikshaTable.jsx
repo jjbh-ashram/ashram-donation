@@ -103,7 +103,7 @@ const BhikshaTable = ({ selectedYears }) => {
                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
         
         const currentValue = getEditValue(bhakt.id, year, monthNumber, 'is_paid', bhakt.donations?.[year]?.[month] || false);
-        updateEditData(bhakt.id, year, monthNumber, 'is_paid', !currentValue);
+        updateEditData(bhakt.id, bhakt.name, year, monthNumber, 'is_paid', !currentValue);
     };
 
     // Handler for opening bhakt details modal

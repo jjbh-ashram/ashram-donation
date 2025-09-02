@@ -124,9 +124,13 @@ export const useBhaktData = () => {
             const monthNumber = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
 
-            // Check if record exists
+            // Get bhakt name for monthly_sync record
+            const bhakt = bhaktData.find(b => b.id === bhaktId);
+            if (!bhakt) throw new Error('Bhakt not found');
+
+            // Check if record exists in monthly_sync
             const { data: existingRecord, error: fetchError } = await supabase
-                .from('monthly_donations')
+                .from('monthly_sync')
                 .select('*')
                 .eq('bhakt_id', bhaktId)
                 .eq('year', year)
@@ -137,33 +141,23 @@ export const useBhaktData = () => {
                 throw fetchError;
             }
 
-            const newDonatedStatus = !existingRecord?.donated;
+            const newPaidStatus = !existingRecord?.is_paid;
 
-            if (existingRecord) {
-                // Update existing record
-                const { error: updateError } = await supabase
-                    .from('monthly_donations')
-                    .update({ 
-                        donated: newDonatedStatus,
-                        donation_date: newDonatedStatus ? new Date().toISOString().split('T')[0] : null
-                    })
-                    .eq('id', existingRecord.id);
+            // Use upsert to handle both insert and update cases
+            const { error: upsertError } = await supabase
+                .from('monthly_sync')
+                .upsert({
+                    bhakt_id: bhaktId,
+                    bhakt_name: bhakt.name,
+                    year: year,
+                    month: monthNumber,
+                    is_paid: newPaidStatus,
+                    payment_source: 'manual'
+                }, {
+                    onConflict: ['bhakt_id', 'year', 'month']
+                });
 
-                if (updateError) throw updateError;
-            } else {
-                // Create new record
-                const { error: insertError } = await supabase
-                    .from('monthly_donations')
-                    .insert({
-                        bhakt_id: bhaktId,
-                        year: year,
-                        month: monthNumber,
-                        donated: newDonatedStatus,
-                        donation_date: newDonatedStatus ? new Date().toISOString().split('T')[0] : null
-                    });
-
-                if (insertError) throw insertError;
-            }
+            if (upsertError) throw upsertError;
 
             // Update local state
             setBhaktData(prevData =>
@@ -175,7 +169,7 @@ export const useBhaktData = () => {
                                 ...bhakt.donations,
                                 [year]: {
                                     ...bhakt.donations[year],
-                                    [month]: newDonatedStatus
+                                    [month]: newPaidStatus
                                 }
                             }
                         }

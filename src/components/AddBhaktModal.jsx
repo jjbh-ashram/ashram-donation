@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import SimpleModal from './SimpleModal';
 import { supabase } from '../lib/supabase';
 
@@ -12,6 +12,67 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
         monthly_donation_amount: ''
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [nameValidation, setNameValidation] = useState({
+        isChecking: false,
+        isDuplicate: false,
+        existingBhakt: null,
+        message: ''
+    });
+
+    // Debounced function to check for duplicate names
+    const checkDuplicateName = useCallback(async (name) => {
+        if (!name.trim()) {
+            setNameValidation({ isChecking: false, isDuplicate: false, existingBhakt: null, message: '' });
+            return;
+        }
+
+        setNameValidation(prev => ({ ...prev, isChecking: true, message: 'Checking...' }));
+
+        try {
+            // Check for exact name match or alias match
+            const { data, error } = await supabase
+                .from('bhakt')
+                .select('name, alias_name, phone_number, monthly_donation_amount')
+                .or(`name.ilike.${name.trim()},alias_name.ilike.${name.trim()}`)
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const existingBhakt = data[0];
+                setNameValidation({
+                    isChecking: false,
+                    isDuplicate: true,
+                    existingBhakt,
+                    message: `⚠️ A bhakt with this name already exists: "${existingBhakt.name}"${existingBhakt.alias_name ? ` (alias: ${existingBhakt.alias_name})` : ''} - ₹${existingBhakt.monthly_donation_amount}/month`
+                });
+            } else {
+                setNameValidation({
+                    isChecking: false,
+                    isDuplicate: false,
+                    existingBhakt: null,
+                    message: '✅ Name is available'
+                });
+            }
+        } catch (error) {
+            console.error('Error checking duplicate name:', error);
+            setNameValidation({
+                isChecking: false,
+                isDuplicate: false,
+                existingBhakt: null,
+                message: '❌ Error checking name availability'
+            });
+        }
+    }, []);
+
+    // Debounce the name checking
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            checkDuplicateName(formData.name);
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(timeoutId);
+    }, [formData.name, checkDuplicateName]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,6 +80,12 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
         // Validation
         if (!formData.name.trim()) {
             alert('Name is required');
+            return;
+        }
+
+        // Check for duplicate name
+        if (nameValidation.isDuplicate) {
+            alert('Cannot add bhakt: A bhakt with this name already exists. Please use a different name.');
             return;
         }
 
@@ -97,10 +164,28 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                            nameValidation.isDuplicate 
+                                ? 'border-red-500 dark:border-red-400' 
+                                : nameValidation.message && !nameValidation.isDuplicate && !nameValidation.isChecking
+                                    ? 'border-green-500 dark:border-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                        }`}
                         required
                         disabled={isLoading}
                     />
+                    {/* Validation message */}
+                    {nameValidation.message && (
+                        <div className={`mt-1 text-sm ${
+                            nameValidation.isDuplicate 
+                                ? 'text-red-600 dark:text-red-400' 
+                                : nameValidation.isChecking
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-green-600 dark:text-green-400'
+                        }`}>
+                            {nameValidation.message}
+                        </div>
+                    )}
                 </div>
 
                 <div>
@@ -189,13 +274,16 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                     <button
                         type="submit"
                         className={`px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isLoading 
+                            isLoading || nameValidation.isDuplicate || nameValidation.isChecking
                                 ? 'bg-gray-400 cursor-not-allowed' 
                                 : 'bg-blue-600 hover:bg-blue-700'
                         }`}
-                        disabled={isLoading}
+                        disabled={isLoading || nameValidation.isDuplicate || nameValidation.isChecking}
                     >
-                        {isLoading ? 'Adding...' : 'Add Bhakt'}
+                        {isLoading ? 'Adding...' : 
+                         nameValidation.isChecking ? 'Checking name...' :
+                         nameValidation.isDuplicate ? 'Name already exists' :
+                         'Add Bhakt'}
                     </button>
                 </div>
             </form>

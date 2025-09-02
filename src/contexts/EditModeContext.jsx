@@ -19,12 +19,13 @@ export const EditModeProvider = ({ children }) => {
   const onDataRefreshRef = useRef(null);
 
   // Track changes made in edit mode
-  const updateEditData = useCallback((bhaktId, year, month, field, value) => {
+  const updateEditData = useCallback((bhaktId, bhaktName, year, month, field, value) => {
     setEditModeData(prev => ({
       ...prev,
       [`${bhaktId}_${year}_${month}`]: {
         ...prev[`${bhaktId}_${year}_${month}`],
         bhakt_id: bhaktId,
+        bhakt_name: bhaktName,
         year,
         month,
         [field]: value
@@ -71,12 +72,18 @@ export const EditModeProvider = ({ children }) => {
       for (const update of updates) {
         const { bhakt_id, year, month, ...fields } = update;
         
+        // Use upsert to handle both insert and update cases
         const { error } = await supabase
           .from('monthly_sync')
-          .update(fields)
-          .eq('bhakt_id', bhakt_id)
-          .eq('year', year)
-          .eq('month', month);
+          .upsert({
+            bhakt_id,
+            year,
+            month,
+            payment_source: 'manual',
+            ...fields
+          }, {
+            onConflict: ['bhakt_id', 'year', 'month']
+          });
 
         if (error) throw error;
       }
