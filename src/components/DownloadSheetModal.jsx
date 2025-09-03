@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import SimpleModal from './SimpleModal';
 import { useYearConfig } from '../hooks/useYearConfig';
 
@@ -55,7 +56,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
 
     // Use availableYears from DB instead of hardcoded years
     const years = availableYears.length > 0 ? availableYears : [currentYear];
-    const formats = ['PDF', 'EXCEL'];
+    const formats = ['PDF', 'EXCEL', 'MATRIX-EXCEL'];
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -141,7 +142,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
 
             doc.save(`BhaktStatus_${new Date().toISOString().slice(0,10)}.pdf`);
     } else if (formData.format && formData.format.toUpperCase() === 'EXCEL') {
-            // Generate Excel using SheetJS
+            // Generate Excel using SheetJS (simple list)
             const wsData = [
                 ['Sr No', 'Name', 'Last Payment', 'Status'],
                 ...data.map((row, idx) => [
@@ -164,8 +165,174 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+        } else if (formData.format && formData.format.toUpperCase() === 'MATRIX-EXCEL') {
+            // Generate styled matrix Excel using exceljs (hide id column, merged year headers, per-year colors)
+            try {
+                // Fetch bhakt details required
+                const { data: bhakts, error: bhError } = await supabase
+                    .from('bhakt')
+                    .select('id,name,monthly_donation_amount,carry_forward_balance,last_payment_date,payment_status')
+                    .order('name', { ascending: true });
+                if (bhError) throw bhError;
+
+                // Fetch years from year_config (active years)
+                const { data: yearsCfg, error: yErr } = await supabase
+                    .from('year_config')
+                    .select('year')
+                    .eq('is_active', true)
+                    .order('year', { ascending: true });
+                if (yErr) throw yErr;
+
+                const yearsList = (yearsCfg && yearsCfg.length > 0) ? yearsCfg.map(y => y.year) : [currentYear];
+
+                // Fetch monthly_sync rows for these years
+                const { data: monthlySyncRows, error: msErr } = await supabase
+                    .from('monthly_sync')
+                    .select('bhakt_id,year,month,is_paid')
+                    .in('year', yearsList);
+                if (msErr) throw msErr;
+
+                // Prepare lookup for paid months
+                const paidSet = new Set((monthlySyncRows || []).filter(r => r.is_paid).map(r => `${r.bhakt_id}::${r.year}::${r.month}`));
+
+                const monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+                // Create workbook and worksheet
+                const workbook = new ExcelJS.Workbook();
+                const ws = workbook.addWorksheet('MonthlyMatrix', { properties: { defaultRowHeight: 20 } });
+
+                // Define front columns
+                const frontCols = [
+                    { header: 'bhakt_id', key: 'bhakt_id', width: 36 },
+                    { header: 'Name', key: 'name', width: 30 },
+                    { header: 'monthly_donation_amount', key: 'monthly_donation_amount', width: 18 },
+                    { header: 'carry_forward_balance', key: 'carry_forward_balance', width: 18 },
+                    { header: 'last_payment_date', key: 'last_payment_date', width: 18 },
+                    { header: 'payment_status', key: 'payment_status', width: 20 }
+                ];
+
+                // Add month columns for each year
+                const monthCols = [];
+                for (const y of yearsList) {
+                    for (let m = 1; m <= 12; m++) {
+                        monthCols.push({ header: `${y}-${String(m).padStart(2,'0')}`, key: `${y}_${m}`, width: 8 });
+                    }
+                }
+
+                ws.columns = [...frontCols, ...monthCols];
+
+                // Hide bhakt_id column (keep value present but hidden for safe re-import)
+                ws.getColumn(1).hidden = true;
+                // also reduce width to make sure it's not visible in some viewers
+                ws.getColumn(1).width = 2;
+
+                // Build header rows: row1 = merged years, row2 = month labels
+                // Insert two header rows at top
+                const headerRow1 = ws.getRow(1);
+                const headerRow2 = ws.getRow(2);
+
+                // Fill first front columns in header rows
+                const frontCount = frontCols.length;
+                for (let c = 1; c <= frontCount; c++) {
+                    headerRow1.getCell(c).value = frontCols[c-1].header;
+                    headerRow2.getCell(c).value = '';
+                    headerRow1.getCell(c).font = { bold: true };
+                }
+
+                // Colors per year (light pastel fills) - ARGB
+                const yearColors = ['FFDBF5FF','FFDFF7E3','FFF3E8FF','FFFFF2D9','FFE8F8FF'];
+
+                // Starting column for months
+                let colIndex = frontCount + 1;
+                for (let yi = 0; yi < yearsList.length; yi++) {
+                    const y = yearsList[yi];
+                    const start = colIndex;
+                    const color = yearColors[yi % yearColors.length];
+                    for (let m = 1; m <= 12; m++) {
+                        // month label in second header row
+                        const cell = headerRow2.getCell(colIndex);
+                        cell.value = monthLabels[m-1];
+                        cell.alignment = { horizontal: 'center' };
+                        cell.font = { bold: true };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+                        cell.border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+                        colIndex++;
+                    }
+                    const end = colIndex - 1;
+                    // Merge year label across the 12 month columns
+                    ws.mergeCells(1, start, 1, end);
+                    const merged = ws.getCell(1, start);
+                    merged.value = String(y);
+                    merged.alignment = { horizontal: 'center', vertical: 'middle' };
+                    merged.font = { bold: true };
+                    merged.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+                    // Add border for merged region
+                    for (let c = start; c <= end; c++) {
+                        ws.getCell(2, c).border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+                    }
+                }
+
+                // Commit header rows
+                headerRow1.commit();
+                headerRow2.commit();
+
+                // Add data rows
+                for (const b of bhakts || []) {
+                    const row = [];
+                    row.push(b.id);
+                    row.push(b.name || '');
+                    row.push(b.monthly_donation_amount ?? '');
+                    row.push(b.carry_forward_balance ?? '');
+                    row.push(b.last_payment_date ?? '');
+                    row.push(b.payment_status ?? '');
+                    for (const y of yearsList) {
+                        for (let m = 1; m <= 12; m++) {
+                            const key = `${b.id}::${y}::${m}`;
+                            row.push(paidSet.has(key) ? '✓' : '');
+                        }
+                    }
+                    const added = ws.addRow(row);
+                    // style the tick cells
+                    let monthColStart = frontCount + 1;
+                    for (let i = 0; i < yearsList.length; i++) {
+                        const bg = yearColors[i % yearColors.length];
+                        for (let m = 1; m <= 12; m++) {
+                            const c = monthColStart;
+                            const cell = added.getCell(c);
+                            // light background for all month cells for readability
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                            cell.alignment = { horizontal: 'center' };
+                            if (cell.value === '✓') {
+                                cell.font = { bold: true, color: { argb: 'FF006400' } }; // dark green
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF98FB98' } }; // pale green for ticks
+                            }
+                            monthColStart++;
+                        }
+                    }
+                    // Optional: add thin border to the whole row
+                    added.commit();
+                }
+
+                // Instruction for admins in visible cell (don't place in hidden column)
+                ws.getCell('B1').value = 'Instructions: Do not edit bhakt_id (hidden column). Put any value in month cells to mark paid.';
+
+                // Generate buffer and trigger download
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MonthlySync_Matrix_${new Date().toISOString().slice(0,10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('Matrix export error', err);
+                alert('Error generating matrix Excel: ' + err.message);
+            }
         } else {
-            alert('Only PDF and Excel download are implemented for now.');
+            alert('Only PDF, EXCEL and MATRIX-EXCEL download are implemented for now.');
         }
 
         onClose();
