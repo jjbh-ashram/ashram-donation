@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
     const [formData, setFormData] = useState({
         name: bhakt?.name || '',
         alias_name: bhakt?.alias_name || '',
@@ -14,7 +15,8 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
         monthly_donation_amount: bhakt?.monthly_donation_amount || '',
         carry_forward_balance: bhakt?.carry_forward_balance || '',
         last_payment_date: bhakt?.last_payment_date || '',
-        payment_status: bhakt?.payment_status || ''
+    payment_status: bhakt?.payment_status || '',
+    is_active: bhakt?.is_active ?? true
     });
 
     // Update form data when bhakt prop changes
@@ -27,6 +29,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                 email: bhakt.email || '',
                 address: bhakt.address || '',
                 monthly_donation_amount: bhakt.monthly_donation_amount || ''
+                ,is_active: bhakt.is_active ?? true
             };
             setFormData(newFormData);
             // Reset editing mode when bhakt changes
@@ -42,6 +45,23 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
         }));
     };
 
+    const handleToggleActive = (e) => {
+        // Only allow changing active state while editing
+        if (!isEditing) return
+
+        const checked = e.target.checked
+        // If attempting to mark inactive, ask for confirmation
+        if (!checked) {
+            const ok = window.confirm('Marking this bhakt as inactive will hide them from lists and stop automated emails. Are you sure you want to continue?')
+            if (!ok) {
+                // revert checkbox by not updating state
+                return
+            }
+        }
+
+        setFormData(prev => ({ ...prev, is_active: checked }))
+    }
+
     const handleUpdate = async () => {
         if (!bhakt?.id) return;
 
@@ -55,6 +75,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                 email: formData.email.trim() || null,
                 address: formData.address.trim() || null,
                 monthly_donation_amount: parseFloat(formData.monthly_donation_amount) || 0
+                ,is_active: formData.is_active === true
             };
 
             // Update in Supabase
@@ -150,6 +171,39 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             {formData.name}
                         </div>
                     )}
+                </div>
+
+                {/* Active toggle */}
+                <div className="flex items-center space-x-3">
+                    <label className={`flex items-center space-x-2 ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                        <input
+                            type="checkbox"
+                            checked={!!formData.is_active}
+                            onChange={handleToggleActive}
+                            disabled={!isEditing}
+                            className="w-4 h-4 text-blue-600 bg-white border rounded"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
+                    </label>
+
+                    {/* Info icon */}
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setShowInfo(prev => !prev)}
+                            onMouseEnter={() => setShowInfo(true)}
+                            onMouseLeave={() => setShowInfo(false)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200"
+                            aria-label="Info"
+                        >
+                            i
+                        </button>
+                        {showInfo && (
+                            <div className="absolute left-0 top-8 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 text-sm text-gray-700 dark:text-gray-300 shadow-lg z-50">
+                                Unchecking this will hide the user from lists and stop automated emails.
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Alias Name */}

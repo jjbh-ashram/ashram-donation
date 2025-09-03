@@ -24,8 +24,10 @@ export const useBhaktData = () => {
                     monthly_donation_amount,
                     carry_forward_balance,
                     last_payment_date,
-                    payment_status
+                    payment_status,
+                    is_active
                 `)
+                .eq('is_active', true)
                 .order('name');
 
             if (bhaktError) throw bhaktError;

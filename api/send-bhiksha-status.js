@@ -30,11 +30,12 @@ export default async function handler(req, res) {
 
     const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 
-    // Query bhakts that have an email
+    // Query bhakts that are active and have an email
     const { data: bhakts, error } = await supa
       .from('bhakt')
-      .select('id,name,email,monthly_donation_amount,last_payment_date,carry_forward_balance,payment_status')
+      .select('id,name,email,monthly_donation_amount,last_payment_date,carry_forward_balance,payment_status,is_active')
       .not('email', 'is', null)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error

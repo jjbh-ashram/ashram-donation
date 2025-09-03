@@ -89,7 +89,7 @@ export default async function handler(req, res) {
       from: fromHeader,
       to: recipients.join(','),
       replyTo,
-      subject: `Weekly MonthlySync Matrix - ${subjectDate}`,
+      subject: `Weekly Bhiksha Excel Sheet - ${subjectDate}`,
   text: 'Jai JagatBandhu Hari\nAttached Weekly Bhiksha Excel Sheet',
       attachments: [{ filename: fileName, content: Buffer.from(buffer) }]
     })
