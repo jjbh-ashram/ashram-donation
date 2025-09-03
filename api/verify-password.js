@@ -28,7 +28,7 @@ export default function handler(req, res) {
     }
 
     // Check password
-    if (password === '1234') {
+    if (password === '7890') {
       // Generate a simple token (demo purposes)
       const token = `verified_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 

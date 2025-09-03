@@ -6,8 +6,22 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Configuration
-const PASSWORD_CHECK_MODE = import.meta.env.VITE_PASSWORD_CHECK_MODE || 'client'
-const CORRECT_PASSWORD = '1234'
+const PASSWORD_CHECK_MODE_ENV = import.meta.env.VITE_PASSWORD_CHECK_MODE
+// default client password (for local/dev). You can override with VITE_CLIENT_PASSWORD
+const CORRECT_PASSWORD = import.meta.env.VITE_CLIENT_PASSWORD || '1234'
+
+// Decide mode: if env explicitly set, use it; otherwise auto-detect based on hostname
+const detectMode = () => {
+    if (PASSWORD_CHECK_MODE_ENV) return PASSWORD_CHECK_MODE_ENV
+    if (typeof window === 'undefined') return 'server'
+    const host = window.location.hostname || ''
+    // treat localhost, 127.0.0.1, and private LAN 192.168.* as local/dev
+    if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) return 'client'
+    return 'server'
+}
+
+// Derived mode
+const PASSWORD_CHECK_MODE = detectMode()
 
 // Client-side password verification
 const verifyPasswordClient = async (password) => {
