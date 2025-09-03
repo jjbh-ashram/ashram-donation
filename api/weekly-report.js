@@ -79,11 +79,18 @@ export default async function handler(req, res) {
     // Use DD/MM/YYYY in email subject for human readability
     const d = new Date()
     const subjectDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+    // Allow custom display name for the sender using SMTP_FROM_NAME or EMAIL_FROM_NAME
+    const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER
+    const fromName = process.env.SMTP_FROM_NAME || process.env.EMAIL_FROM_NAME || ''
+    const fromHeader = fromName ? `${fromName} <${fromAddress}>` : fromAddress
+    const replyTo = process.env.SMTP_REPLY_TO || fromAddress
+
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: fromHeader,
       to: recipients.join(','),
+      replyTo,
       subject: `Weekly MonthlySync Matrix - ${subjectDate}`,
-      text: 'Attached is the weekly MonthlySync matrix backup.',
+  text: 'Jai JagatBandhu Hari\nAttached Weekly Bhiksha Excel Sheet',
       attachments: [{ filename: fileName, content: Buffer.from(buffer) }]
     })
 
