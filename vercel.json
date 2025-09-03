@@ -4,12 +4,15 @@
       "source": "/api/(.*)",
       "destination": "/api/$1"
     }
-  ]
-  ,
+  ],
   "crons": [
     {
       "path": "/api/weekly-report",
-      "schedule": "0 0 */7 * *"
+      "schedule": "40 4 7,21,28 * *"
+    },
+    {
+      "path": "/api/send-bhiksha-status",
+      "schedule": "40 4 4 * *"
     }
   ]
 }
