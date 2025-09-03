@@ -1,4 +1,4 @@
-import { generateMonthlyMatrixBuffer } from './_lib/excel-generator'
+import { generateMonthlyMatrixBuffer } from './_lib/excel-generator.js'
 import nodemailer from 'nodemailer'
 
 export default async function handler(req, res) {
