@@ -4,6 +4,7 @@ import AddBhaktModal from './AddBhaktModal';
 import AddBhikshaModal from './AddBhikshaModal';
 import PrintStatusModal from './PrintStatusModal';
 import DownloadSheetModal from './DownloadSheetModal';
+import BackupsModal from './BackupsModal';
 import AddYearModal from './AddYearModal';
 import ViewDonationsModal from './ViewDonationsModal';
 import ActivitySummary from './ActivitySummary';
@@ -17,6 +18,7 @@ const Dashboard = () => {
     const [showAddBhikshaModal, setShowAddBhikshaModal] = useState(false);
     const [showPrintStatusModal, setShowPrintStatusModal] = useState(false);
     const [showDownloadSheetModal, setShowDownloadSheetModal] = useState(false);
+    const [showBackupsModal, setShowBackupsModal] = useState(false);
     const [showAddYearModal, setShowAddYearModal] = useState(false);
     const [showViewDonationsModal, setShowViewDonationsModal] = useState(false);
     const [selectedYears, setSelectedYears] = useState([]);
@@ -153,7 +155,7 @@ const Dashboard = () => {
                             <div className="relative" id="yearFilterContainer">
                                 <button
                                     onClick={() => setShowYearDropdown(!showYearDropdown)}
-                                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                                 >
                                     <span>Years ({selectedYears.length})</span>
                                     <svg className={`w-4 h-4 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +204,7 @@ const Dashboard = () => {
                                             <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600 space-y-2">
                                                 <button
                                                     onClick={handleAddNewYear}
-                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors cursor-pointer"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -214,7 +216,7 @@ const Dashboard = () => {
                                                 <button
                                                     onClick={handleSyncMonthlyData}
                                                     disabled={syncLoading}
-                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="w-full flex items-center justify-center space-x-2 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -233,25 +235,26 @@ const Dashboard = () => {
                             <div className="hidden lg:flex items-center space-x-3">
                                 <button
                                     onClick={handleAddBhiksha}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
                                 >
                                     Add Bhiksha
                                 </button>
+                                
                                 <button
                                     onClick={handlePrintStatus}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
                                 >
                                     Print Bhakt Status
                                 </button>
                                 <button
                                     onClick={handleDownloadSheet}
-                                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
                                 >
                                     Download Status (All)
                                 </button>
                                 <button
                                     onClick={handleAddBhakt}
-                                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
                                 >
                                     Add New Bhakt
                                 </button>
@@ -259,9 +262,15 @@ const Dashboard = () => {
                                 {/* View Donations Button */}
                                 <button
                                     onClick={() => setShowViewDonationsModal(true)}
-                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
                                 >
                                     View Donations
+                                </button>
+                                <button
+                                    onClick={() => setShowBackupsModal(true)}
+                                    className="ml-8 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
+                                >
+                                    Backups
                                 </button>
                             </div>
                        
@@ -278,6 +287,12 @@ const Dashboard = () => {
                             className="flex-shrink-0 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
                         >
                             Add Bhiksha
+                        </button>
+                        <button
+                            onClick={() => setShowBackupsModal(true)}
+                            className="flex-shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                        >
+                            Backups
                         </button>
                         <button
                             onClick={handlePrintStatus}
@@ -344,6 +359,11 @@ const Dashboard = () => {
             <DownloadSheetModal 
                 isOpen={showDownloadSheetModal} 
                 onClose={() => setShowDownloadSheetModal(false)} 
+            />
+
+            <BackupsModal
+                isOpen={showBackupsModal}
+                onClose={() => setShowBackupsModal(false)}
             />
 
             <AddYearModal 

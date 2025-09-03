@@ -193,7 +193,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             onClick={() => setShowInfo(prev => !prev)}
                             onMouseEnter={() => setShowInfo(true)}
                             onMouseLeave={() => setShowInfo(false)}
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200"
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 cursor-pointer"
                             aria-label="Info"
                         >
                             i

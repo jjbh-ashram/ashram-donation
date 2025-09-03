@@ -56,7 +56,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
 
     // Use availableYears from DB instead of hardcoded years
     const years = availableYears.length > 0 ? availableYears : [currentYear];
-    const formats = ['PDF', 'EXCEL', 'MATRIX-EXCEL'];
+    const formats = ['PDF', 'EXCEL'];
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -165,33 +165,8 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-        } else if (formData.format && formData.format.toUpperCase() === 'MATRIX-EXCEL') {
-            // Request server to generate matrix Excel and return as attachment
-            try {
-                const resp = await fetch('/api/generate-monthly-matrix', { method: 'GET' });
-                if (!resp.ok) {
-                    const body = await resp.json().catch(() => ({}));
-                    throw new Error(body.error || `Server error: ${resp.status}`);
-                }
-                const blob = await resp.blob();
-                const contentDisposition = resp.headers.get('content-disposition') || '';
-                let filename = `MonthlySync_Matrix_${new Date().toISOString().slice(0,10)}.xlsx`;
-                const match = /filename="?([^";]+)"?/.exec(contentDisposition);
-                if (match) filename = match[1];
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            } catch (err) {
-                console.error('Server matrix export error', err);
-                alert('Error generating matrix export on server: ' + err.message);
-            }
         } else {
-            alert('Only PDF, EXCEL and MATRIX-EXCEL download are implemented for now.');
+            alert('Only PDF and EXCEL download are implemented for now.');
         }
 
         onClose();
