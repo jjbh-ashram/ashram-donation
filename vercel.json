@@ -5,4 +5,11 @@
       "destination": "/api/$1"
     }
   ]
+  ,
+  "crons": [
+    {
+      "path": "/api/weekly-report",
+      "schedule": "0 0 */7 * *"
+    }
+  ]
 }
