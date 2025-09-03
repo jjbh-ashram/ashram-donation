@@ -1,5 +1,6 @@
 import { generateMonthlyMatrixBuffer } from './_lib/excel-generator.js'
 import nodemailer from 'nodemailer'
+import { createClient } from '@supabase/supabase-js'
 
 export default async function handler(req, res) {
   // CORS
@@ -33,6 +34,30 @@ export default async function handler(req, res) {
 
     const { buffer, fileName } = await generateMonthlyMatrixBuffer(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
 
+    // Optional: upload backup to Supabase Storage
+    const bucketName = process.env.SUPABASE_BACKUP_BUCKET || 'backups'
+    try {
+      const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
+      // Use a timestamped path inside the bucket
+      const now = new Date()
+      const dd = String(now.getDate()).padStart(2, '0')
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const yyyy = now.getFullYear()
+      const timePart = now.toISOString().replace(/[:.]/g, '-')
+      const objectName = `monthly-matrix/${yyyy}-${mm}-${dd}/${timePart}-${fileName}`
+
+      const uploadRes = await supa.storage.from(bucketName).upload(objectName, Buffer.from(buffer), {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        upsert: true
+      })
+      if (uploadRes.error) {
+        console.warn('Supabase storage upload warning:', uploadRes.error)
+      }
+    } catch (storeErr) {
+      console.warn('Failed to upload backup to Supabase Storage:', storeErr)
+      // Continue even if backup fails
+    }
+
     // Send email to recipients list from env var (comma separated)
     const recipientsRaw = process.env.WEEKLY_REPORT_RECIPIENTS || ''
     const recipients = recipientsRaw.split(',').map(s => s.trim()).filter(Boolean)
@@ -51,10 +76,13 @@ export default async function handler(req, res) {
       }
     })
 
+    // Use DD/MM/YYYY in email subject for human readability
+    const d = new Date()
+    const subjectDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: recipients.join(','),
-      subject: `Weekly MonthlySync Matrix - ${new Date().toLocaleDateString()}`,
+      subject: `Weekly MonthlySync Matrix - ${subjectDate}`,
       text: 'Attached is the weekly MonthlySync matrix backup.',
       attachments: [{ filename: fileName, content: Buffer.from(buffer) }]
     })

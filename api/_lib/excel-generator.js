@@ -132,6 +132,11 @@ export async function generateMonthlyMatrixBuffer(supabaseUrl, supabaseServiceRo
   ws.getCell('B1').value = 'Instructions: Do not edit bhakt_id (hidden column). Put any value in month cells to mark paid.'
 
   const buffer = await workbook.xlsx.writeBuffer()
-  const fileName = `MonthlySync_Matrix_${new Date().toISOString().slice(0,10)}.xlsx`
+  // Use DD-MM-YYYY in the filename (slashes are invalid in filenames on many OSes)
+  const d = new Date()
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const fileName = `MonthlySync_Matrix_${dd}-${mm}-${yyyy}.xlsx`
   return { buffer, fileName }
 }

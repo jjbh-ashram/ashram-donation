@@ -19,6 +19,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  // Optional: protect download endpoint with ADMIN_SECRET via Authorization header
+  const authHeader = req.headers['authorization'] || req.headers['Authorization']
+  if (process.env.ADMIN_SECRET) {
+    if (!authHeader || String(authHeader) !== `Bearer ${process.env.ADMIN_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+  }
+
   try {
     const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_KEY
