@@ -52,8 +52,25 @@ const BackupsModal = ({ isOpen, onClose }) => {
         return
       }
 
-      // Exclude sensitive/internal columns if present
+      // Exclude sensitive/internal columns if present and add friendly headers
       const exclude = new Set(['id', 'bhakt_id', 'updated_at'])
+      const HEADER_MAP = {
+        id: 'ID',
+        bhakt_id: 'Bhakt ID',
+        bhakt_name: 'Bhakt Name',
+        year: 'Year',
+        month: 'Month',
+        donated: 'Donated',
+        amount: 'Amount',
+        donation_date: 'Donation Date',
+        payment_date: 'Payment Date',
+        amount_paid: 'Amount Paid',
+        notes: 'Notes',
+        remarks: 'Remarks',
+        created_at: 'Created At',
+        updated_at: 'Updated At'
+      }
+
       const filtered = data.map(row => {
         const obj = {}
         for (const k of Object.keys(row)) {
@@ -62,8 +79,12 @@ const BackupsModal = ({ isOpen, onClose }) => {
         return obj
       })
 
-      // Convert to worksheet and download using SheetJS
-      const worksheet = XLSX.utils.json_to_sheet(filtered)
+      // Build an array-of-arrays with header row (friendly labels) then data rows
+      const keys = Object.keys(filtered[0] || {})
+      const headerRow = keys.map(k => HEADER_MAP[k] || k)
+      const rows = filtered.map(r => keys.map(k => r[k]))
+      const aoa = [headerRow, ...rows]
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa)
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'MonthlyDonations')
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
@@ -96,7 +117,7 @@ const BackupsModal = ({ isOpen, onClose }) => {
           <button
             onClick={downloadMatrix}
             disabled={isDownloadingMatrix}
-            className={`px-4 py-3 rounded text-white ${isDownloadingMatrix ? 'bg-red-400 cursor-wait' : 'bg-red-600 hover:bg-red-700'}`}>
+            className={`px-4 py-3 rounded text-white ${isDownloadingMatrix ? 'bg-gray-300 cursor-wait' : 'bg-gray-400 hover:bg-gray-600'}`}>
             {isDownloadingMatrix ? (
               <span className="flex items-center justify-center">
                 <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -128,11 +149,11 @@ const BackupsModal = ({ isOpen, onClose }) => {
           </button>
           
         </div>
-        <p className="text-sm text-gray-600 mt-2 pb-3 w-full border-b-2 border-black">Use the Download Excel sheet button to get the Manually Maintainable Excel sheet - Same as Table Displaying on website.</p>
+        <p className="text-sm text-blue-600 mt-2 pb-3 w-full border-b-2 border-black">ℹ️ Use the Download Excel sheet button to get the Manually Maintainable Excel sheet - Same as Table Displaying on website.</p>
         
         
-        <button onClick={uploadExcel} className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
-        <p className="text-sm text-gray-600 ">Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p>
+        <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
+        <p className="text-sm text-yellow-700 ">⚠️ Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p>
       </div>
     </SimpleModal>
   )

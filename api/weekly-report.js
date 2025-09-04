@@ -74,12 +74,29 @@ export default async function handler(req, res) {
         const txWb = new ExcelJS.Workbook()
         const txWs = txWb.addWorksheet('transactions')
 
-        // Determine columns, excluding id, bhakt_id, updated_at
+        // Determine columns, excluding id, bhakt_id, updated_at, and use friendly headers
         const exclude = new Set(['id', 'bhakt_id', 'updated_at'])
+        const HEADER_MAP = {
+          id: 'ID',
+          bhakt_id: 'Bhakt ID',
+          bhakt_name: 'Bhakt Name',
+          year: 'Year',
+          month: 'Month',
+          donated: 'Donated',
+          amount: 'Amount',
+          donation_date: 'Donation Date',
+          payment_date: 'Payment Date',
+          amount_paid: 'Amount Paid',
+          notes: 'Notes',
+          remarks: 'Remarks',
+          created_at: 'Created At',
+          updated_at: 'Updated At'
+        }
+
         const sample = transactions[0]
         const keys = Object.keys(sample).filter(k => !exclude.has(k))
 
-        txWs.columns = keys.map(k => ({ header: k, key: k, width: 20 }))
+        txWs.columns = keys.map(k => ({ header: HEADER_MAP[k] || k, key: k, width: 20 }))
 
         for (const row of transactions) {
           const filtered = {}
@@ -141,7 +158,7 @@ export default async function handler(req, res) {
       to: recipients.join(','),
       replyTo,
       subject: `Weekly Bhiksha Excel Sheet - ${subjectDate}`,
-      text: 'Jai JagatBandhu Hari\nAttached Weekly Bhiksha Excel Sheet',
+      text: 'Jai JagatBandhu Hari\nHere is Attached Weekly Bhiksha Excel Sheet and Weekly Donations Report',
       attachments
     })
 
