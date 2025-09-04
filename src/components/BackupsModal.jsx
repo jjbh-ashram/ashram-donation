@@ -52,15 +52,29 @@ const BackupsModal = ({ isOpen, onClose }) => {
         return
       }
 
+      // Exclude sensitive/internal columns if present
+      const exclude = new Set(['id', 'bhakt_id', 'updated_at'])
+      const filtered = data.map(row => {
+        const obj = {}
+        for (const k of Object.keys(row)) {
+          if (!exclude.has(k)) obj[k] = row[k]
+        }
+        return obj
+      })
+
       // Convert to worksheet and download using SheetJS
-      const worksheet = XLSX.utils.json_to_sheet(data)
+      const worksheet = XLSX.utils.json_to_sheet(filtered)
       const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'transactions')
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'MonthlyDonations')
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
       const blob = new Blob([wbout], { type: 'application/octet-stream' })
       const url = window.URL.createObjectURL(blob)
+      const now = new Date()
+      const dd = String(now.getDate()).padStart(2, '0')
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const yyyy = now.getFullYear()
+      const filename = `MonthlyDonations_${dd}-${mm}-${yyyy}.xlsx`
       const a = document.createElement('a')
-      const filename = `monthly_donations_${new Date().toISOString().slice(0,10)}.xlsx`
       a.href = url
       a.download = filename
       document.body.appendChild(a)

@@ -1,6 +1,7 @@
 import { generateMonthlyMatrixBuffer } from './_lib/excel-generator.js'
 import nodemailer from 'nodemailer'
 import { createClient } from '@supabase/supabase-js'
+import ExcelJS from 'exceljs'
 
 export default async function handler(req, res) {
   // CORS
@@ -36,14 +37,14 @@ export default async function handler(req, res) {
 
     // Optional: upload backup to Supabase Storage
     const bucketName = process.env.SUPABASE_BACKUP_BUCKET || 'backups'
+    const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, '0')
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const yyyy = now.getFullYear()
+    const timePart = now.toISOString().replace(/[:.]/g, '-')
+    // Upload matrix
     try {
-      const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE)
-      // Use a timestamped path inside the bucket
-      const now = new Date()
-      const dd = String(now.getDate()).padStart(2, '0')
-      const mm = String(now.getMonth() + 1).padStart(2, '0')
-      const yyyy = now.getFullYear()
-      const timePart = now.toISOString().replace(/[:.]/g, '-')
       const objectName = `monthly-matrix/${yyyy}-${mm}-${dd}/${timePart}-${fileName}`
 
       const uploadRes = await supa.storage.from(bucketName).upload(objectName, Buffer.from(buffer), {
@@ -51,11 +52,58 @@ export default async function handler(req, res) {
         upsert: true
       })
       if (uploadRes.error) {
-        console.warn('Supabase storage upload warning:', uploadRes.error)
+        console.warn('Supabase storage upload warning (matrix):', uploadRes.error)
       }
     } catch (storeErr) {
-      console.warn('Failed to upload backup to Supabase Storage:', storeErr)
+      console.warn('Failed to upload matrix backup to Supabase Storage:', storeErr)
       // Continue even if backup fails
+    }
+
+    // Generate transactions Excel and upload it too
+    let txBuffer = null
+    let txFileName = null
+    try {
+      const { data: transactions, error: txErr } = await supa
+        .from('monthly_donations')
+        .select('*')
+        .order('created_at', { ascending: true })
+
+      if (txErr) throw txErr
+
+      if (transactions && transactions.length > 0) {
+        const txWb = new ExcelJS.Workbook()
+        const txWs = txWb.addWorksheet('transactions')
+
+        // Determine columns, excluding id, bhakt_id, updated_at
+        const exclude = new Set(['id', 'bhakt_id', 'updated_at'])
+        const sample = transactions[0]
+        const keys = Object.keys(sample).filter(k => !exclude.has(k))
+
+        txWs.columns = keys.map(k => ({ header: k, key: k, width: 20 }))
+
+        for (const row of transactions) {
+          const filtered = {}
+          for (const k of keys) filtered[k] = row[k]
+          txWs.addRow(filtered)
+        }
+
+        txBuffer = await txWb.xlsx.writeBuffer()
+        txFileName = `MonthlyDonations_${dd}-${mm}-${yyyy}.xlsx`
+
+        try {
+          const txObject = `monthly-transactions/${yyyy}-${mm}-${dd}/${timePart}-${txFileName}`
+          const uploadTx = await supa.storage.from(bucketName).upload(txObject, Buffer.from(txBuffer), {
+            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            upsert: true
+          })
+          if (uploadTx.error) console.warn('Supabase storage upload warning (transactions):', uploadTx.error)
+        } catch (uErr) {
+          console.warn('Failed to upload transactions backup to Supabase Storage:', uErr)
+        }
+      }
+    } catch (txCatch) {
+      console.warn('Failed to generate/upload transactions excel:', txCatch)
+      // continue without transactions file
     }
 
     // Send email to recipients list from env var (comma separated)
@@ -85,13 +133,16 @@ export default async function handler(req, res) {
     const fromHeader = fromName ? `${fromName} <${fromAddress}>` : fromAddress
     const replyTo = process.env.SMTP_REPLY_TO || fromAddress
 
+    const attachments = [{ filename: fileName, content: Buffer.from(buffer) }]
+    if (txBuffer && txFileName) attachments.push({ filename: txFileName, content: Buffer.from(txBuffer) })
+
     await transporter.sendMail({
       from: fromHeader,
       to: recipients.join(','),
       replyTo,
       subject: `Weekly Bhiksha Excel Sheet - ${subjectDate}`,
-  text: 'Jai JagatBandhu Hari\nAttached Weekly Bhiksha Excel Sheet',
-      attachments: [{ filename: fileName, content: Buffer.from(buffer) }]
+      text: 'Jai JagatBandhu Hari\nAttached Weekly Bhiksha Excel Sheet',
+      attachments
     })
 
     return res.status(200).json({ success: true, recipients })

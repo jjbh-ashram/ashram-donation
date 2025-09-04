@@ -137,6 +137,6 @@ export async function generateMonthlyMatrixBuffer(supabaseUrl, supabaseServiceRo
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const yyyy = d.getFullYear()
-  const fileName = `MonthlySync_Matrix_${dd}-${mm}-${yyyy}.xlsx`
+  const fileName = `MonthlyBhiksha_Excel_${dd}-${mm}-${yyyy}.xlsx`
   return { buffer, fileName }
 }
