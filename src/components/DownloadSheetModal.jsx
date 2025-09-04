@@ -173,7 +173,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <SimpleModal isOpen={isOpen} onClose={onClose} title="Download Sheet">
+        <SimpleModal isOpen={isOpen} onClose={onClose} title="Download Status Sheet - All Bhakts">
             <form onSubmit={handlePrint} className="space-y-6">
                 {/* From Date */}
                 <div>
@@ -256,9 +256,13 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                 </div>
+                
+                
+                
 
                 {/* Format Selection */}
                 <div>
+                    
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Format
                     </label>

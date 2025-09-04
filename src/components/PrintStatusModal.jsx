@@ -11,15 +11,12 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
 
     const [formData, setFormData] = useState({
         selectedBhakt: '',
-        reportType: 'current',
-        fromMonth: currentMonth,
-        fromYear: currentYear,
-        toMonth: currentMonth,
-        toYear: currentYear
+        reportType: 'current'
     });
     const [step, setStep] = useState(1); // 1: form, 2: result
     const [loading, setLoading] = useState(false);
     const [generatedData, setGeneratedData] = useState(null); // Placeholder for generated data
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     const [filteredBhakts, setFilteredBhakts] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -132,7 +129,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                     };
                     // Receipt text for copy/share/whatsapp/email
                     const receiptText =
-                  `🧾 *Donation Receipt*\n\n*Name:* ${receipt.name}\n*Monthly Donation:* ₹${receipt.monthly.toLocaleString()}\n*Last Payment Date:* ${receipt.lastPayment}\n*Extra Balance:* ₹${receipt.balance.toLocaleString()}\n*Status:* ${receipt.status}\n`;
+                  `🧾 *Bhiksha Status*\n\n*Name:* ${receipt.name}\n*Monthly Donation:* ₹${receipt.monthly.toLocaleString()}\n*Last Payment Date:* ${receipt.lastPayment}\n*Extra Balance:* ₹${receipt.balance.toLocaleString()}\n*Status:* ${receipt.status}\n`;
                     setGeneratedData({ receipt, receiptText });
                 }
             } else {
@@ -144,7 +141,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
     };
 
     // Step 2: Action buttons
-    const handleAction = (actionType) => {
+    const handleAction = async (actionType) => {
         if (!generatedData || !generatedData.receiptText) return;
         if (actionType === 'Copy') {
             navigator.clipboard.writeText(generatedData.receiptText);
@@ -155,18 +152,27 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
             } else {
                 alert('Share not supported on this device.');
             }
-        } else if (actionType === 'WhatsApp') {
-            const phone = generatedData.receipt.phone;
-            if (phone) {
-                const url = `https://wa.me/${phone}?text=${encodeURIComponent(generatedData.receiptText)}`;
-                window.open(url, '_blank');
-            }
         } else if (actionType === 'Email') {
             const email = generatedData.receipt.email;
             if (email) {
-                const subject = encodeURIComponent('Donation Receipt');
-                const body = encodeURIComponent(generatedData.receiptText);
-                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                setIsSendingEmail(true)
+                try {
+                    const resp = await fetch('/api/send-bhakt-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bhakt_id: formData.selectedBhakt })
+                    })
+                    const data = await resp.json()
+                    if (resp.ok && data.success) {
+                        alert('Email sent successfully')
+                    } else {
+                        alert('Failed to send email: ' + (data.error || resp.statusText))
+                    }
+                } catch (err) {
+                    alert('Error sending email: ' + (err.message || err))
+                } finally {
+                    setIsSendingEmail(false)
+                }
             }
         } else if (actionType === 'Print') {
             // Print the receipt
@@ -230,128 +236,16 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                 Report Type
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <label className="relative">
-                                    <input
-                                        type="radio"
-                                        name="reportType"
-                                        value="current"
-                                        checked={formData.reportType === 'current'}
-                                        onChange={handleInputChange}
-                                        className="sr-only"
-                                    />
-                                    <div className={`cursor-pointer px-4 py-3 text-center border rounded-md transition-all ${
-                                        formData.reportType === 'current'
-                                            ? 'bg-blue-500 text-white border-blue-500'
-                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                                    }`}>
-                                        <div className="font-medium">Current Status</div>
-                                        <div className="text-sm opacity-75">All available data</div>
-                                    </div>
-                                </label>
-                                <label className="relative">
-                                    <input
-                                        type="radio"
-                                        name="reportType"
-                                        value="custom"
-                                        checked={formData.reportType === 'custom'}
-                                        onChange={handleInputChange}
-                                        className="sr-only"
-                                    />
-                                    <div className={`cursor-pointer px-4 py-3 text-center border rounded-md transition-all ${
-                                        formData.reportType === 'custom'
-                                            ? 'bg-blue-500 text-white border-blue-500'
-                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                                    }`}>
-                                        <div className="font-medium">Custom Duration</div>
-                                        <div className="text-sm opacity-75">Specific time range</div>
-                                    </div>
-                                </label>
+                            <div className="grid grid-cols-1">
+                                <div className="px-4 py-3 text-center border rounded-md bg-blue-500 text-white">
+                                    <div className="font-medium">Current Status</div>
+                                    <div className="text-sm opacity-75">Showing latest available data</div>
+                                </div>
                             </div>
                         </div>
 
                         {/* Custom Duration Fields */}
-                        {formData.reportType === 'custom' && (
-                            <>
-                                {/* From Date */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                        From Date
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Month</label>
-                                            <select
-                                                name="fromMonth"
-                                                value={formData.fromMonth}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                            >
-                                                {months.map(month => (
-                                                    <option key={month.value} value={month.value}>
-                                                        {month.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Year</label>
-                                            <select
-                                                name="fromYear"
-                                                value={formData.fromYear}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                            >
-                                                {years.map(year => (
-                                                    <option key={year} value={year}>
-                                                        {year}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* To Date */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                        To Date
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Month</label>
-                                            <select
-                                                name="toMonth"
-                                                value={formData.toMonth}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                            >
-                                                {months.map(month => (
-                                                    <option key={month.value} value={month.value}>
-                                                        {month.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Year</label>
-                                            <select
-                                                name="toYear"
-                                                value={formData.toYear}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                            >
-                                                {years.map(year => (
-                                                    <option key={year} value={year}>
-                                                        {year}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                        {/* Custom duration removed - only Current Status supported */}
 
                         {/* Step 1: Generate Button */}
                         <div className="flex justify-end pt-4">
