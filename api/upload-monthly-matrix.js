@@ -40,9 +40,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase service credentials not configured on server.' })
   }
 
-  // Parse multipart/form-data using formidable
-  const form = new formidable.IncomingForm()
-  form.maxFileSize = 50 * 1024 * 1024 // 50MB
+  // Parse multipart/form-data using formidable (modern API)
+  const form = formidable({ maxFileSize: 50 * 1024 * 1024 }) // 50MB
 
   try {
     const formResult = await new Promise((resolve, reject) => {
