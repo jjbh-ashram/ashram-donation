@@ -9,6 +9,7 @@ const BackupsModal = ({ isOpen, onClose }) => {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatusLines, setUploadStatusLines] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
+  const [dragActive, setDragActive] = useState(false)
   const [previewData, setPreviewData] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
@@ -37,6 +38,17 @@ const BackupsModal = ({ isOpen, onClose }) => {
     }
   }
 
+  const parseResponseSafely = async (resp) => {
+    // Try JSON, fall back to text
+    try {
+      const json = await resp.json()
+      return { ok: resp.ok, body: json }
+    } catch (e) {
+      const text = await resp.text()
+      return { ok: resp.ok, body: text }
+    }
+  }
+
   const uploadExcel = () => {
     if (!selectedFile) return alert('Please select an Excel file to upload')
 
@@ -58,14 +70,16 @@ const BackupsModal = ({ isOpen, onClose }) => {
         if (process.env.REACT_APP_ADMIN_SECRET) headers['Authorization'] = `Bearer ${process.env.REACT_APP_ADMIN_SECRET}`
 
         const resp = await fetch('/api/upload-monthly-matrix', { method: 'POST', headers, body: form })
-        const json = await resp.json()
-        if (!resp.ok) {
-          setUploadStatusLines(prev => [...prev, `Validation failed: ${json.error || resp.statusText}`])
-          alert('Validation failed: ' + (json.error || resp.statusText))
+        const parsed = await parseResponseSafely(resp)
+        if (!parsed.ok) {
+          const body = parsed.body
+          setUploadStatusLines(prev => [...prev, `Validation failed: ${body && (body.error || body) || resp.statusText}`])
+          alert('Validation failed: ' + (body && (body.error || body) || resp.statusText))
           setIsUploading(false)
           return
         }
 
+        const json = parsed.body
         setUploadStatusLines(prev => [...prev, 'Validation successful — preview ready'])
         setPreviewData(json.preview)
         setIsPreviewOpen(true)
@@ -82,6 +96,14 @@ const BackupsModal = ({ isOpen, onClose }) => {
 
   const onFileChange = (e) => {
     const f = e.target.files && e.target.files[0]
+    setSelectedFile(f || null)
+  }
+
+  const onDragOver = (e) => { e.preventDefault(); setDragActive(true) }
+  const onDragLeave = (e) => { e.preventDefault(); setDragActive(false) }
+  const onDrop = (e) => {
+    e.preventDefault(); setDragActive(false)
+    const f = e.dataTransfer.files && e.dataTransfer.files[0]
     setSelectedFile(f || null)
   }
 
@@ -235,19 +257,40 @@ const BackupsModal = ({ isOpen, onClose }) => {
         <p className="text-sm text-blue-600 mt-2 pb-3 w-full border-b-2 border-black">ℹ️ Use the Download Excel sheet button to get the Manually Maintainable Excel sheet - Same as Table Displaying on website.</p>
         
         
-        <div className="space-y-2">
-          <input type="file" accept=".xlsx,.xls" onChange={onFileChange} />
-          <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
+        <div>
+          <div
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            className={`p-4 rounded border-2 ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-dashed border-gray-300 bg-white'}`}>
+            <div className="flex items-center space-x-3">
+              <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg>
+              <div>
+                <div className="font-medium">Drag & drop your Excel file here, or</div>
+                <label className="text-blue-600 underline cursor-pointer">click to browse
+                  <input type="file" accept=".xlsx,.xls" onChange={onFileChange} className="hidden" />
+                </label>
+                <div className="text-sm text-gray-500">Accepted: .xlsx, .xls — Format must match exported matrix</div>
+              </div>
+            </div>
+            {selectedFile && (
+              <div className="mt-3 text-sm">Selected file: <strong>{selectedFile.name}</strong></div>
+            )}
+          </div>
+          <div className="mt-2">
+            <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
+          </div>
         </div>
         <p className="text-sm text-yellow-700 ">⚠️ Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p>
       </div>
       {/* Blocking progress overlay while uploading */}
       {isUploading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-11/12 max-w-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 backdrop-blur-sm bg-white/40" />
+          <div className="relative bg-white p-6 rounded shadow-lg w-11/12 max-w-2xl">
             <h3 className="font-bold mb-3">Applying Upload — Please wait</h3>
             <div className="w-full bg-gray-200 rounded h-3 mb-3">
-              <div className="bg-blue-500 h-3 rounded" style={{ width: '40%' }} />
+              <div className="bg-blue-500 h-3 rounded" style={{ width: '50%' }} />
             </div>
             <div className="space-y-1 text-sm max-h-60 overflow-auto">
               {uploadStatusLines.map((l, i) => (
