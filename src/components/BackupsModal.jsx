@@ -41,10 +41,10 @@ const BackupsModal = ({ isOpen, onClose }) => {
   const parseResponseSafely = async (resp) => {
     // Try JSON, fall back to text
     try {
-      const json = await resp.json()
+      const json = await resp.clone().json()
       return { ok: resp.ok, body: json }
     } catch (e) {
-      const text = await resp.text()
+      const text = await resp.clone().text()
       return { ok: resp.ok, body: text }
     }
   }
