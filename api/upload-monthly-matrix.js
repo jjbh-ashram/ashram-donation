@@ -51,16 +51,32 @@ export default async function handler(req, res) {
       })
     })
 
-    const file = formResult.files?.file || formResult.files?.upload
+    // Pick the uploaded file robustly: formidable may store files under different field names
+    const filesObj = formResult.files || {}
+    const fileEntries = Object.values(filesObj)
+    if (!fileEntries || fileEntries.length === 0) {
+      return res.status(400).json({ error: 'No file uploaded. Use form field `file`.' })
+    }
+    let candidate = fileEntries[0]
+    // formidable may return an array when multiple files uploaded under same field
+    if (Array.isArray(candidate)) candidate = candidate[0]
+    const file = candidate
     if (!file) return res.status(400).json({ error: 'No file uploaded. Use form field `file`.' })
 
     const workbook = new ExcelJS.Workbook()
-    // formidable v2+ provides `filepath`; older versions used `path`
+    // formidable v2+ provides `filepath`; older versions used `path`; newer may provide a buffer
     const uploadedPath = file?.filepath || file?.path || file?.tempFilePath
-    if (!uploadedPath) {
-      return res.status(400).json({ error: 'Uploaded file path unavailable on server. Ensure multipart file was sent correctly.' })
+    if (uploadedPath) {
+      await workbook.xlsx.readFile(uploadedPath)
+    } else if (file?.buffer) {
+      // formidable can provide buffer
+      await workbook.xlsx.load(file.buffer)
+    } else if (file?.arrayBuffer) {
+      const buf = Buffer.from(await file.arrayBuffer())
+      await workbook.xlsx.load(buf)
+    } else {
+      return res.status(400).json({ error: 'Uploaded file path unavailable on server and buffer not provided. Ensure multipart file was sent correctly.' })
     }
-    await workbook.xlsx.readFile(uploadedPath)
 
     // Expect the matrix sheet in first worksheet
     const ws = workbook.worksheets[0]
