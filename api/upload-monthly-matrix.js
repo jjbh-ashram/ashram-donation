@@ -55,7 +55,12 @@ export default async function handler(req, res) {
     if (!file) return res.status(400).json({ error: 'No file uploaded. Use form field `file`.' })
 
     const workbook = new ExcelJS.Workbook()
-    await workbook.xlsx.readFile(file.path)
+    // formidable v2+ provides `filepath`; older versions used `path`
+    const uploadedPath = file?.filepath || file?.path || file?.tempFilePath
+    if (!uploadedPath) {
+      return res.status(400).json({ error: 'Uploaded file path unavailable on server. Ensure multipart file was sent correctly.' })
+    }
+    await workbook.xlsx.readFile(uploadedPath)
 
     // Expect the matrix sheet in first worksheet
     const ws = workbook.worksheets[0]
