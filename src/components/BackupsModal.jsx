@@ -6,6 +6,11 @@ import { supabase } from '../lib/supabase'
 const BackupsModal = ({ isOpen, onClose }) => {
   const [isDownloadingMatrix, setIsDownloadingMatrix] = useState(false)
   const [isDownloadingTransactions, setIsDownloadingTransactions] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadStatusLines, setUploadStatusLines] = useState([])
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [previewData, setPreviewData] = useState(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const downloadMatrix = async () => {
     setIsDownloadingMatrix(true)
@@ -33,8 +38,86 @@ const BackupsModal = ({ isOpen, onClose }) => {
   }
 
   const uploadExcel = () => {
-    // placeholder - user will implement upload parsing & server endpoint
-    alert('Upload Excel - not implemented yet')
+    if (!selectedFile) return alert('Please select an Excel file to upload')
+
+    // Confirm overwrite
+    const ok = window.confirm('This will overwrite the Monthly Sync table in the database. Do you want to continue?')
+    if (!ok) return
+
+    // perform upload
+    // Step 1: validate (get preview)
+    const doValidate = async () => {
+      setIsUploading(true)
+      setUploadStatusLines(['Validating uploaded file...'])
+      try {
+        const form = new FormData()
+        form.append('file', selectedFile)
+        form.append('action', 'validate')
+
+        const headers = {}
+        if (process.env.REACT_APP_ADMIN_SECRET) headers['Authorization'] = `Bearer ${process.env.REACT_APP_ADMIN_SECRET}`
+
+        const resp = await fetch('/api/upload-monthly-matrix', { method: 'POST', headers, body: form })
+        const json = await resp.json()
+        if (!resp.ok) {
+          setUploadStatusLines(prev => [...prev, `Validation failed: ${json.error || resp.statusText}`])
+          alert('Validation failed: ' + (json.error || resp.statusText))
+          setIsUploading(false)
+          return
+        }
+
+        setUploadStatusLines(prev => [...prev, 'Validation successful — preview ready'])
+        setPreviewData(json.preview)
+        setIsPreviewOpen(true)
+      } catch (err) {
+        setUploadStatusLines(prev => [...prev, `Validation error: ${err.message || err}`])
+        alert('Validation error: ' + err.message)
+      } finally {
+        setIsUploading(false)
+      }
+    }
+
+    doValidate()
+  }
+
+  const onFileChange = (e) => {
+    const f = e.target.files && e.target.files[0]
+    setSelectedFile(f || null)
+  }
+
+  const applyUpload = async () => {
+    if (!selectedFile) return alert('No file to apply')
+    const ok = window.confirm('Are you sure you want to apply these changes and overwrite the database?')
+    if (!ok) return
+
+    setIsUploading(true)
+    setUploadStatusLines(['Applying changes...'])
+    try {
+      const form = new FormData()
+      form.append('file', selectedFile)
+      form.append('action', 'apply')
+
+      const headers = {}
+      if (process.env.REACT_APP_ADMIN_SECRET) headers['Authorization'] = `Bearer ${process.env.REACT_APP_ADMIN_SECRET}`
+
+      setUploadStatusLines(prev => [...prev, 'Uploading file and applying changes on server...'])
+      const resp = await fetch('/api/upload-monthly-matrix', { method: 'POST', headers, body: form })
+      const json = await resp.json()
+      if (!resp.ok) {
+        setUploadStatusLines(prev => [...prev, `Apply failed: ${json.error || resp.statusText}`])
+        alert('Apply failed: ' + (json.error || resp.statusText))
+      } else {
+        setUploadStatusLines(prev => [...prev, `Apply complete: updated ${json.applied || 0} entries; created ${json.createdBhakts || 0} bhakts`])
+        alert('Apply completed: ' + (json.applied || 0) + ' changes applied')
+        setIsPreviewOpen(false)
+        setPreviewData(null)
+      }
+    } catch (err) {
+      setUploadStatusLines(prev => [...prev, `Apply error: ${err.message || err}`])
+      alert('Apply failed: ' + err.message)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const downloadTransactions = async () => {
@@ -152,9 +235,81 @@ const BackupsModal = ({ isOpen, onClose }) => {
         <p className="text-sm text-blue-600 mt-2 pb-3 w-full border-b-2 border-black">ℹ️ Use the Download Excel sheet button to get the Manually Maintainable Excel sheet - Same as Table Displaying on website.</p>
         
         
-        <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
+        <div className="space-y-2">
+          <input type="file" accept=".xlsx,.xls" onChange={onFileChange} />
+          <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
+        </div>
         <p className="text-sm text-yellow-700 ">⚠️ Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p>
       </div>
+      {/* Blocking progress overlay while uploading */}
+      {isUploading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-11/12 max-w-2xl">
+            <h3 className="font-bold mb-3">Applying Upload — Please wait</h3>
+            <div className="w-full bg-gray-200 rounded h-3 mb-3">
+              <div className="bg-blue-500 h-3 rounded" style={{ width: '40%' }} />
+            </div>
+            <div className="space-y-1 text-sm max-h-60 overflow-auto">
+              {uploadStatusLines.map((l, i) => (
+                <div key={i} className="py-1 border-b">{l}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Preview modal */}
+      {isPreviewOpen && previewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-11/12 max-w-3xl">
+            <h3 className="font-bold mb-3">Upload Preview</h3>
+            <div className="mb-4 text-sm">
+              <div>Rows in uploaded file: <strong>{previewData.totalRows}</strong></div>
+              <div>New Bhakts detected: <strong>{previewData.newBhakts?.length || 0}</strong></div>
+              <div>Monthly changes detected: <strong>{previewData.monthlyChanges?.length || 0}</strong></div>
+            </div>
+            <div className="max-h-64 overflow-auto border p-2 mb-4">
+              <h4 className="font-semibold">New Bhakts</h4>
+              {previewData.newBhakts && previewData.newBhakts.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {previewData.newBhakts.map((n, i) => <li key={i}>{n.name || `${n.id || 'unknown id'}`}</li>)}
+                </ul>
+              ) : (
+                <div className="text-sm text-gray-600">None</div>
+              )}
+            </div>
+            <div className="max-h-64 overflow-auto border p-2 mb-4">
+              <h4 className="font-semibold">Sample Monthly Changes</h4>
+              {previewData.monthlyChanges && previewData.monthlyChanges.length > 0 ? (
+                <table className="w-full text-sm table-auto">
+                  <thead>
+                    <tr className="text-left"><th>Bhakt</th><th>Year</th><th>Month</th><th>Existing</th><th>Uploaded</th></tr>
+                  </thead>
+                  <tbody>
+                    {previewData.monthlyChanges.slice(0,50).map((mc, idx) => (
+                      mc.diffs.map((d, j) => (
+                        <tr key={`${idx}-${j}`}>
+                          <td>{mc.name || mc.bhakt_id}</td>
+                          <td>{d.year}</td>
+                          <td>{d.month}</td>
+                          <td>{d.existing ? String(d.existing.donated) : 'N/A'}</td>
+                          <td>{String(d.uploaded)}</td>
+                        </tr>
+                      ))
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-sm text-gray-600">No monthly changes detected</div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button onClick={() => { setIsPreviewOpen(false); setPreviewData(null) }} className="px-3 py-2 border rounded">Cancel</button>
+              <button onClick={applyUpload} className="px-3 py-2 bg-red-500 text-white rounded">Apply Overwrite</button>
+            </div>
+          </div>
+        </div>
+      )}
     </SimpleModal>
   )
 }
