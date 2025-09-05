@@ -176,7 +176,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
         <SimpleModal isOpen={isOpen} onClose={onClose} title="Download Status Sheet - All Bhakts">
             <form onSubmit={handlePrint} className="space-y-6">
                 {/* From Date */}
-                <div>
+                {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         From Date
                     </label>
@@ -214,10 +214,10 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
                             </select>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* To Date */}
-                <div>
+                {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         To Date
                     </label>
@@ -255,7 +255,7 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
                             </select>
                         </div>
                     </div>
-                </div>
+                </div> */}
                 
                 
                 
