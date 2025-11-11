@@ -329,7 +329,7 @@ const Dashboard = () => {
                     {/* Activity Summary */}
                     {/* <ActivitySummary /> */}
                     
-                    <div className="h-full max-h-[calc(100vh-180px)] overflow-hidden">
+                    <div className="h-full max-h-[calc(100vh-10px)] overflow-hidden">
                         <BhikshaTable 
                             key={refreshKey} 
                             selectedYears={selectedYears} 

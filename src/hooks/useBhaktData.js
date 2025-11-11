@@ -63,9 +63,17 @@ export const useBhaktData = () => {
                             ms.year === year && ms.month === month
                         );
                         
-                        // Use sync record is_paid status, or false if no record exists
-                        const isPaid = syncRecord ? syncRecord.is_paid : false;
-                        donations[year][monthName] = isPaid;
+                        // Store is_paid status and the amount from monthly_sync
+                        // Only use stored amount if it exists in the record (not null/undefined)
+                        // If amount field doesn't exist in DB, fall back to current monthly_donation_amount
+                        const storedAmount = syncRecord && 'amount' in syncRecord && syncRecord.amount !== null
+                            ? syncRecord.amount 
+                            : bhakt.monthly_donation_amount || 0;
+                        
+                        donations[year][monthName] = {
+                            isPaid: syncRecord ? syncRecord.is_paid : false,
+                            amount: storedAmount
+                        };
                     }
                 });
 
@@ -146,6 +154,7 @@ export const useBhaktData = () => {
             const newPaidStatus = !existingRecord?.is_paid;
 
             // Use upsert to handle both insert and update cases
+            // When marking as paid, store the current monthly_donation_amount
             const { error: upsertError } = await supabase
                 .from('monthly_sync')
                 .upsert({
@@ -154,6 +163,7 @@ export const useBhaktData = () => {
                     year: year,
                     month: monthNumber,
                     is_paid: newPaidStatus,
+                    amount: newPaidStatus ? bhakt.monthly_donation_amount : (existingRecord?.amount || 0),
                     payment_source: 'manual'
                 }, {
                     onConflict: ['bhakt_id', 'year', 'month']

@@ -112,22 +112,28 @@ const DownloadSheetModal = ({ isOpen, onClose }) => {
                 head: [['Sr No', 'Name', 'Last Payment', 'Status']],
                 body: tableData,
                 startY: 35,
-                theme: 'striped',
+                theme: 'grid',
                 styles: {
                     fontSize: 11,
                     cellPadding: 4,
                     valign: 'middle',
+                    lineColor: [0, 0, 0], // Black borders
+                    lineWidth: 0.1,
+                    textColor: [0, 0, 0], // Black text
                 },
                 headStyles: {
-                    fillColor: [41, 128, 185], // blue
-                    textColor: 255,
+                    fillColor: [255, 255, 255], // White background
+                    textColor: [0, 0, 0], // Black text
                     fontStyle: 'bold',
+                    lineColor: [0, 0, 0], // Black borders
+                    lineWidth: 0.3,
                 },
                 alternateRowStyles: {
-                    fillColor: [230, 240, 255], // light blue
+                    fillColor: [255, 255, 255], // White background (no alternating colors)
                 },
                 rowStyles: {
                     minCellHeight: 12,
+                    fillColor: [255, 255, 255], // White background
                 },
                 columnStyles: {
                     0: { cellWidth: 18 }, // Sr No

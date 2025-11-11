@@ -102,8 +102,16 @@ const BhikshaTable = ({ selectedYears }) => {
         const monthNumber = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
         
-        const currentValue = getEditValue(bhakt.id, year, monthNumber, 'is_paid', bhakt.donations?.[year]?.[month] || false);
-        updateEditData(bhakt.id, bhakt.name, year, monthNumber, 'is_paid', !currentValue);
+        const originalData = bhakt.donations?.[year]?.[month] || { isPaid: false, amount: 0 };
+        const currentValue = typeof originalData === 'boolean' 
+            ? getEditValue(bhakt.id, year, monthNumber, 'is_paid', originalData)
+            : getEditValue(bhakt.id, year, monthNumber, 'is_paid', originalData.isPaid);
+        
+        // When marking as paid, store the current monthly_donation_amount
+        const newPaidStatus = !currentValue;
+        const amountToStore = newPaidStatus ? bhakt.monthly_donation_amount : (originalData.amount || 0);
+        
+        updateEditData(bhakt.id, bhakt.name, year, monthNumber, 'is_paid', newPaidStatus, amountToStore);
     };
 
     // Handler for opening bhakt details modal
@@ -373,7 +381,7 @@ const BhikshaTable = ({ selectedYears }) => {
                                 onMouseLeave={() => setHoveredRowId(null)}
                             >
                                 <td 
-                                    className={`sticky left-0 px-3 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 z-20 ${
+                                    className={`sticky left-0 px-2 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 z-20 ${
                                         hoveredRowId === bhakt.id 
                                             ? 'bg-gray-200 dark:bg-gray-600' 
                                             : idx % 2 === 0 
@@ -409,7 +417,9 @@ const BhikshaTable = ({ selectedYears }) => {
                                     months.map(month => {
                                         const monthNumber = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                                                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month) + 1;
-                                        const originalValue = bhakt.donations?.[year]?.[month] || false;
+                                        const originalData = bhakt.donations?.[year]?.[month] || { isPaid: false, amount: 0 };
+                                        const originalValue = typeof originalData === 'boolean' ? originalData : originalData.isPaid;
+                                        const amount = typeof originalData === 'boolean' ? 0 : (originalData.amount || 0);
                                         const isDonated = isEditMode 
                                             ? getEditValue(bhakt.id, year, monthNumber, 'is_paid', originalValue)
                                             : originalValue;
@@ -426,30 +436,38 @@ const BhikshaTable = ({ selectedYears }) => {
                                                 }`} 
                                                 style={{width: '60px', minWidth: '60px', maxWidth: '60px'}}
                                             >
-                                                <div
-                                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center mx-auto shadow-sm relative ${
-                                                        isEditMode ? 'cursor-pointer hover:scale-110' : 'cursor-default'
-                                                    } ${
-                                                        isDonated
-                                                            ? 'bg-green-500 border-green-500 text-white shadow-md'
-                                                            : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500'
-                                                    } ${
-                                                        isModified ? 'ring-2 ring-orange-400 ring-offset-1' : ''
-                                                    }`}
-                                                    title={isEditMode 
-                                                        ? `${month} ${year} - Click to ${isDonated ? 'mark as unpaid' : 'mark as paid'}${isModified ? ' (Modified)' : ''}`
-                                                        : `${month} ${year} - ${isDonated ? 'Paid' : 'Not paid'} (Read-only - Use Add Bhiksha Entry)`
-                                                    }
-                                                    onClick={() => handleCellClick(bhakt, year, month)}
-                                                >
-                                                    {isDonated && (
-                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                    )}
-                                                    {/* Modified indicator */}
-                                                    {isModified && (
-                                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+                                                <div className="flex flex-col items-center justify-center space-y-0.5">
+                                                    <div
+                                                        className={`w-6 h-6 rounded border-2 flex items-center justify-center shadow-sm relative ${
+                                                            isEditMode ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+                                                        } ${
+                                                            isDonated
+                                                                ? 'bg-green-500 border-green-500 text-white shadow-md'
+                                                                : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500'
+                                                        } ${
+                                                            isModified ? 'ring-2 ring-orange-400 ring-offset-1' : ''
+                                                        }`}
+                                                        title={isEditMode 
+                                                            ? `${month} ${year} - Click to ${isDonated ? 'mark as unpaid' : 'mark as paid'}${isModified ? ' (Modified)' : ''}`
+                                                            : `${month} ${year} - ${isDonated ? 'Paid' : 'Not paid'} (Read-only - Use Add Bhiksha Entry)`
+                                                        }
+                                                        onClick={() => handleCellClick(bhakt, year, month)}
+                                                    >
+                                                        {isDonated && (
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        )}
+                                                        {/* Modified indicator */}
+                                                        {isModified && (
+                                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+                                                        )}
+                                                    </div>
+                                                    {/* Display amount if donated */}
+                                                    {isDonated && amount > 0 && (
+                                                        <div className="text-[10px] font-medium text-green-700 dark:text-green-400 leading-none">
+                                                            ₹{amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>

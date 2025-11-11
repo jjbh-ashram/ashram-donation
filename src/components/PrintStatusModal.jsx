@@ -3,7 +3,7 @@ import SimpleModal from './SimpleModal';
 import { useBhaktData } from '../hooks/useBhaktData';
 
 const PrintStatusModal = ({ isOpen, onClose }) => {
-    const { bhaktData } = useBhaktData();
+    const { bhaktData, refreshData } = useBhaktData();
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
@@ -22,6 +22,13 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const dropdownRef = useRef(null);
+
+    // Refresh bhakt data when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            refreshData();
+        }
+    }, [isOpen, refreshData]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -232,7 +239,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* Report Type Selection */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                 Report Type
                             </label>
@@ -242,7 +249,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                                     <div className="text-sm opacity-75">Showing latest available data</div>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Custom Duration Fields */}
                         {/* Custom duration removed - only Current Status supported */}

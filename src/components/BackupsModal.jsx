@@ -257,7 +257,7 @@ const BackupsModal = ({ isOpen, onClose }) => {
         <p className="text-sm text-blue-600 mt-2 pb-3 w-full border-b-2 border-black">ℹ️ Use the Download Excel sheet button to get the Manually Maintainable Excel sheet - Same as Table Displaying on website.</p>
         
         
-        <div>
+        {/* <div>
           <div
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
@@ -281,10 +281,12 @@ const BackupsModal = ({ isOpen, onClose }) => {
             <button onClick={uploadExcel} className="w-full px-4 py-3 bg-red-400 hover:bg-red-500 text-gray-800 rounded cursor-pointer">Upload Excel Sheet</button>
           </div>
         </div>
-        <p className="text-sm text-yellow-700 ">⚠️ Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p>
+        <p className="text-sm text-yellow-700 ">⚠️ Uploading Excel Sheet - Will overwrite the Database MonthlySync Table and it is not reversible.</p> */}
       </div>
+
+
       {/* Blocking progress overlay while uploading */}
-      {isUploading && (
+      {/* {isUploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 backdrop-blur-sm bg-white/40" />
           <div className="relative bg-white p-6 rounded shadow-lg w-11/12 max-w-2xl">
@@ -299,7 +301,9 @@ const BackupsModal = ({ isOpen, onClose }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
+
+
       {/* Preview modal */}
       {isPreviewOpen && previewData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

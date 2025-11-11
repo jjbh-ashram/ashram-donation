@@ -19,18 +19,25 @@ export const EditModeProvider = ({ children }) => {
   const onDataRefreshRef = useRef(null);
 
   // Track changes made in edit mode
-  const updateEditData = useCallback((bhaktId, bhaktName, year, month, field, value) => {
-    setEditModeData(prev => ({
-      ...prev,
-      [`${bhaktId}_${year}_${month}`]: {
-        ...prev[`${bhaktId}_${year}_${month}`],
-        bhakt_id: bhaktId,
-        bhakt_name: bhaktName,
-        year,
-        month,
-        [field]: value
-      }
-    }));
+  const updateEditData = useCallback((bhaktId, bhaktName, year, month, field, value, amount = null) => {
+    setEditModeData(prev => {
+      const key = `${bhaktId}_${year}_${month}`;
+      const existingData = prev[key] || {};
+      
+      return {
+        ...prev,
+        [key]: {
+          ...existingData,
+          bhakt_id: bhaktId,
+          bhakt_name: bhaktName,
+          year,
+          month,
+          [field]: value,
+          // Store amount if provided (for marking as paid)
+          ...(amount !== null && { amount: amount })
+        }
+      };
+    });
     setHasUnsavedChanges(true);
   }, []);
 

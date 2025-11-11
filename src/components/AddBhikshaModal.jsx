@@ -5,7 +5,7 @@ import { useBhaktData } from '../hooks/useBhaktData';
 import RecieptPdf from './RecieptPdf';
 
 const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
-    const { bhaktData, loading, addBhikshaEntryTransaction } = useBhaktData();
+    const { bhaktData, loading, addBhikshaEntryTransaction, refreshData } = useBhaktData();
     const [formData, setFormData] = useState({
         bhaktName: '',
         amount: '',
@@ -20,6 +20,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     const [lastSubmittedName, setLastSubmittedName] = useState('');
     const [showPDF, setShowPDF] = useState(false);
     const [generatedData, setGeneratedData] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for submission
     
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -57,6 +58,9 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
     // Reset form when modal opens/closes
     useEffect(() => {
         if (isOpen) {
+            // Refresh bhakt data to get latest monthly_donation_amount values
+            refreshData();
+            
             setSearchTerm('');
             setShowDropdown(false);
             setFormData({
@@ -66,11 +70,17 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 remarks: ''
             });
             setShowStatus(false);
+            setIsSubmitting(false); // Reset submitting state when modal opens
         }
-    }, [isOpen]);
+    }, [isOpen, refreshData]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Prevent double submission
+        if (isSubmitting) {
+            return;
+        }
         
         // Simple validation
         if (!formData.bhaktName.trim()) {
@@ -85,6 +95,9 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
             setToast({ message: 'Payment date is required', type: 'error' });
             return;
         }
+
+        // Set loading state
+        setIsSubmitting(true);
 
         try {
             const result = await addBhikshaEntryTransaction(
@@ -164,10 +177,12 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 
             } else {
                 setToast({ message: `Error: ${result.error}`, type: 'error' });
+                setIsSubmitting(false); // Reset loading state on error
             }
         } catch (error) {
             console.error('Error submitting bhiksha entry:', error);
             setToast({ message: 'An error occurred while saving the entry. Please try again.', type: 'error' });
+            setIsSubmitting(false); // Reset loading state on error
         }
     };
 
@@ -338,21 +353,29 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                        disabled={isSubmitting}
+                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                        disabled={isSubmitting}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        Add Bhiksha
+                        {isSubmitting && (
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        )}
+                        {isSubmitting ? 'Processing...' : 'Add Bhiksha'}
                     </button>
                 </div>
             </form>
         </SimpleModal>
 
-//~~ Traditional PrintStatus Modal - Data showing and buttons
+{/* //~~ Traditional PrintStatus Modal - Data showing and buttons */}
         {/* {showStatus && (
             <SimpleModal isOpen={showStatus} onClose={() => setShowStatus(false)} title="Bhakt Status">
                 <div className="p-4 rounded-lg">
