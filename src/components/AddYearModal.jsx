@@ -65,7 +65,7 @@ const AddYearModal = ({ isOpen, onClose, onRefreshYears, existingYears }) => {
         <SimpleModal isOpen={isOpen} onClose={handleClose} title="Add New Year">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Year *
                     </label>
                     <input
@@ -75,17 +75,17 @@ const AddYearModal = ({ isOpen, onClose, onRefreshYears, existingYears }) => {
                         placeholder={`e.g., ${suggestedYear}`}
                         min="2020"
                         max="2050"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         required
                     />
                     {error && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        <p className="mt-1 text-sm text-red-600">
                             {error}
                         </p>
                     )}
                 </div>
 
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600">
                     <p>Existing years: {existingYears.join(', ')}</p>
                     <p>Suggested next year: {suggestedYear}</p>
                 </div>
@@ -95,7 +95,7 @@ const AddYearModal = ({ isOpen, onClose, onRefreshYears, existingYears }) => {
                         type="button"
                         onClick={handleClose}
                         disabled={isLoading}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                     >
                         Cancel
                     </button>

@@ -307,7 +307,7 @@ const BackupsModal = ({ isOpen, onClose }) => {
       {/* Preview modal */}
       {isPreviewOpen && previewData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-11/12 max-w-3xl">
+          <div className="bg-white p-6 rounded shadow-lg w-11/12 max-w-3xl">
             <h3 className="font-bold mb-3">Upload Preview</h3>
             <div className="mb-4 text-sm">
               <div>Rows in uploaded file: <strong>{previewData.totalRows}</strong></div>

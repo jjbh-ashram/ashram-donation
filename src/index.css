@@ -1,1 +1,52 @@
 @import "tailwindcss";
+
+/* Modern, readable font stack for all screens */
+* {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base font size - larger for better readability */
+html {
+  font-size: 16px;
+}
+
+/* Better line height for readability */
+body {
+  line-height: 1.6;
+}
+
+/* Sticky column enhancement for mobile - prevent horizontal scroll issues */
+@media (max-width: 768px) {
+  /* Make name column narrower on mobile */
+  .mobile-name-column {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+  }
+  
+  /* Larger touch targets on mobile */
+  .mobile-checkbox {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+  
+  /* Better font sizes for mobile */
+  .mobile-name-text {
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .mobile-amount-text {
+    font-size: 11px !important;
+  }
+}
+
+/* Enhanced scrolling for table */
+.table-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}

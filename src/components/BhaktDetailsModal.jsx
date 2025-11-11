@@ -136,25 +136,25 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
             <div className="space-y-4">
                 {/* Stats Section */}
                 <div className="flex flex-row gap-4 mb-2">
-                    <div className="flex-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-center">
-                        <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Carry Forward Balance</div>
-                        <div className="text-lg font-bold text-blue-900 dark:text-blue-100">₹{bhakt?.carry_forward_balance ?? 0}</div>
+                    <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                        <div className="text-xs font-semibold text-blue-700 mb-1">Carry Forward Balance</div>
+                        <div className="text-lg font-bold text-blue-900">₹{bhakt?.carry_forward_balance ?? 0}</div>
                     </div>
-                    <div className="flex-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-center">
-                        <div className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">Last Payment Date</div>
-                        <div className="text-lg font-bold text-green-900 dark:text-green-100">{bhakt?.last_payment_date ? bhakt.last_payment_date : 'N/A'}</div>
+                    <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                        <div className="text-xs font-semibold text-green-700 mb-1">Last Payment Date</div>
+                        <div className="text-lg font-bold text-green-900">{bhakt?.last_payment_date ? bhakt.last_payment_date : 'N/A'}</div>
                     </div>
                 </div>
-                <div className="w-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3 text-center flex items-center justify-center mb-2">
+                <div className="w-full bg-purple-50 border border-purple-200 rounded-lg p-3 text-center flex items-center justify-center mb-2">
                     <div>
-                        <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">Payment Status</div>
-                        <div className="text-lg font-bold text-purple-900 dark:text-purple-100 whitespace-pre-line">{bhakt?.payment_status ? bhakt.payment_status : 'N/A'}</div>
+                        <div className="text-xs font-semibold text-purple-700 mb-1">Payment Status</div>
+                        <div className="text-lg font-bold text-purple-900 whitespace-pre-line">{bhakt?.payment_status ? bhakt.payment_status : 'N/A'}</div>
                     </div>
                 </div>
 
                 {/* Name */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Name *
                     </label>
                     {isEditing ? (
@@ -163,11 +163,11 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                             required
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                             {formData.name}
                         </div>
                     )}
@@ -183,7 +183,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             disabled={!isEditing}
                             className="w-4 h-4 text-blue-600 bg-white border rounded"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
+                        <span className="text-sm text-gray-700">Active</span>
                     </label>
 
                     {/* Info icon */}
@@ -193,13 +193,13 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             onClick={() => setShowInfo(prev => !prev)}
                             onMouseEnter={() => setShowInfo(true)}
                             onMouseLeave={() => setShowInfo(false)}
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 cursor-pointer"
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer"
                             aria-label="Info"
                         >
                             i
                         </button>
                         {showInfo && (
-                            <div className="absolute left-0 top-8 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 text-sm text-gray-700 dark:text-gray-300 shadow-lg z-50">
+                            <div className="absolute left-0 top-8 w-64 bg-white border border-gray-200 rounded-md p-2 text-sm text-gray-700 shadow-lg z-50">
                                 Unchecking this will hide the user from lists and stop automated emails.
                             </div>
                         )}
@@ -208,7 +208,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
 
                 {/* Alias Name */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Alias Name
                     </label>
                     {isEditing ? (
@@ -217,10 +217,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             name="alias_name"
                             value={formData.alias_name}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                             {formData.alias_name || 'Not set'}
                         </div>
                     )}
@@ -228,7 +228,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
 
                 {/* Phone Number */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number
                     </label>
                     {isEditing ? (
@@ -237,10 +237,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             name="phone_number"
                             value={formData.phone_number}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                             {formData.phone_number || 'Not set'}
                         </div>
                     )}
@@ -248,7 +248,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
 
                 {/* Email */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
                     </label>
                     {isEditing ? (
@@ -257,10 +257,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                             {formData.email || 'Not set'}
                         </div>
                     )}
@@ -268,7 +268,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
 
                 {/* Address */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Address
                     </label>
                     {isEditing ? (
@@ -277,10 +277,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             value={formData.address}
                             onChange={handleInputChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white min-h-[80px]">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 min-h-[80px]">
                             {formData.address || 'Not set'}
                         </div>
                     )}
@@ -288,7 +288,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
 
                 {/* Monthly Donation Amount */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Monthly Donation Amount
                     </label>
                     {isEditing ? (
@@ -299,10 +299,10 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             onChange={handleInputChange}
                             min="0"
                             step="0.01"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         />
                     ) : (
-                        <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-white">
+                        <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900">
                             ₹{formData.monthly_donation_amount || '0.00'}
                         </div>
                     )}
@@ -315,7 +315,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                                 disabled={isLoading}
                             >
                                 Cancel
@@ -334,7 +334,7 @@ const BhaktDetailsModal = ({ isOpen, onClose, bhakt, onBhaktUpdated }) => {
                             <button
                                 type="button"
                                 onClick={handleClose}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Close
                             </button>

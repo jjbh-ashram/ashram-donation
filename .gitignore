@@ -30,6 +30,7 @@ database/create_bhakt_table_simple.sql
 DATABASE_SETUP.md
 database/insert_real_bhakt_data.sql
 database/*
+*.md
 <<<<<<< HEAD
 database/debug/04_performance_monitoring.sql
 database/debug/02_data_consistency_checks.sql

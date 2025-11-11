@@ -205,7 +205,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                     <>
                         {/* Bhakt Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Select Bhakt
                             </label>
                             <div className="relative" ref={dropdownRef}>
@@ -215,22 +215,22 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                                     onChange={(e) => handleSearchChange(e.target.value)}
                                     onFocus={handleInputFocus}
                                     placeholder="Search bhakt by name..."
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                                     required
                                 />
                                 {showDropdown && filteredBhakts.length > 0 && (
-                                    <div className="absolute z-50 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                                    <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
                                         {filteredBhakts.map(bhakt => (
                                             <div
                                                 key={bhakt.id}
                                                 onClick={() => handleBhaktSelect(bhakt)}
-                                                className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-gray-100"
+                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-900"
                                             >
                                                 <div className="font-medium">{bhakt.name}</div>
                                                 {bhakt.alias_name && (
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">({bhakt.alias_name})</div>
+                                                    <div className="text-sm text-gray-500">({bhakt.alias_name})</div>
                                                 )}
-                                                <div className="text-sm text-green-600 dark:text-green-400">₹{bhakt.monthly_donation_amount.toLocaleString()}/month</div>
+                                                <div className="text-sm text-green-600">₹{bhakt.monthly_donation_amount.toLocaleString()}/month</div>
                                             </div>
                                         ))}
                                     </div>
@@ -240,7 +240,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
 
                         {/* Report Type Selection */}
                         {/* <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Report Type
                             </label>
                             <div className="grid grid-cols-1">
@@ -271,7 +271,7 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="ml-2 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="ml-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                                 disabled={loading}
                             >
                                 Cancel
@@ -283,17 +283,17 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                 {step === 2 && (
                     <>
                         {/* Step 2: Generated Data Receipt */}
-                        <div className="min-h-[120px] flex flex-col items-center justify-center border border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-4">
+                        <div className="min-h-[120px] flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-md bg-gray-50 text-gray-900 p-4">
                             {generatedData?.error ? (
                                 <span className="text-red-500">{generatedData.error}</span>
                             ) : (
                                 <div className="w-full max-w-md">
                                     <div className="text-lg font-bold mb-2 text-center">🧾 Donation Receipt</div>
                                     <div className="mb-1"><span className="font-semibold">Name:</span> {generatedData.receipt.name}</div>
-                                    <div className="mb-1"><span className="font-semibold">Monthly Donation:</span> <span className="text-green-600 dark:text-green-400">₹{generatedData.receipt.monthly.toLocaleString()}</span></div>
+                                    <div className="mb-1"><span className="font-semibold">Monthly Donation:</span> <span className="text-green-600">₹{generatedData.receipt.monthly.toLocaleString()}</span></div>
                                     <div className="mb-1"><span className="font-semibold">Last Payment Date:</span> {generatedData.receipt.lastPayment}</div>
-                                    <div className="mb-1"><span className="font-semibold">Extra Balance:</span> <span className="text-blue-600 dark:text-blue-400">₹{generatedData.receipt.balance.toLocaleString()}</span></div>
-                                    <div className="mb-1"><span className="font-semibold">Status:</span> <span className="font-bold text-purple-700 dark:text-purple-400">{generatedData.receipt.status}</span></div>
+                                    <div className="mb-1"><span className="font-semibold">Extra Balance:</span> <span className="text-blue-600">₹{generatedData.receipt.balance.toLocaleString()}</span></div>
+                                    <div className="mb-1"><span className="font-semibold">Status:</span> <span className="font-bold text-purple-700">{generatedData.receipt.status}</span></div>
                                 </div>
                             )}
                         </div>
@@ -356,14 +356,14 @@ const PrintStatusModal = ({ isOpen, onClose }) => {
                                     setSearchTerm('');
                                     setFormData('');
                                 }}
-                                className="px-4 py-2 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-700"
+                                className="px-4 py-2 text-blue-700 border border-blue-300 rounded-md hover:bg-blue-50"
                             >
                                 Generate New
                             </button>
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                             >
                                 Close
                             </button>

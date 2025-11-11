@@ -77,13 +77,13 @@ const ActivitySummary = () => {
 
     if (loading) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/4 mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="h-20 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                        <div className="h-20 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                        <div className="h-20 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-20 bg-gray-200 rounded"></div>
+                        <div className="h-20 bg-gray-200 rounded"></div>
+                        <div className="h-20 bg-gray-200 rounded"></div>
                     </div>
                 </div>
             </div>
@@ -91,14 +91,14 @@ const ActivitySummary = () => {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-gray-900">
                     📊 Activity Summary
                 </h2>
                 <button
                     onClick={fetchTodaysActivity}
-                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                 >
                     🔄 Refresh
                 </button>
@@ -106,32 +106,32 @@ const ActivitySummary = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                    <div className="text-sm text-green-600 dark:text-green-400">Today</div>
-                    <div className="text-xl font-bold text-green-800 dark:text-green-200">
+                <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-sm text-green-600">Today</div>
+                    <div className="text-xl font-bold text-green-800">
                         {todaysStats.todayTransactions} donations
                     </div>
-                    <div className="text-lg text-green-700 dark:text-green-300">
+                    <div className="text-lg text-green-700">
                         {formatCurrency(todaysStats.todayAmount)}
                     </div>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <div className="text-sm text-blue-600 dark:text-blue-400">This Week</div>
-                    <div className="text-xl font-bold text-blue-800 dark:text-blue-200">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-sm text-blue-600">This Week</div>
+                    <div className="text-xl font-bold text-blue-800">
                         {todaysStats.weekTransactions} donations
                     </div>
-                    <div className="text-lg text-blue-700 dark:text-blue-300">
+                    <div className="text-lg text-blue-700">
                         {formatCurrency(todaysStats.weekAmount)}
                     </div>
                 </div>
 
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                    <div className="text-sm text-purple-600 dark:text-purple-400">Recent Activity</div>
-                    <div className="text-xl font-bold text-purple-800 dark:text-purple-200">
+                <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="text-sm text-purple-600">Recent Activity</div>
+                    <div className="text-xl font-bold text-purple-800">
                         {todaysStats.recentTransactions.length} latest
                     </div>
-                    <div className="text-sm text-purple-700 dark:text-purple-300">
+                    <div className="text-sm text-purple-700">
                         Last: {todaysStats.recentTransactions[0] ? formatDate(todaysStats.recentTransactions[0].payment_date) : 'None'}
                     </div>
                 </div>
@@ -140,19 +140,19 @@ const ActivitySummary = () => {
             {/* Recent Transactions */}
             {todaysStats.recentTransactions.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recent Transactions</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Recent Transactions</h3>
                     <div className="space-y-2">
                         {todaysStats.recentTransactions.slice(0, 3).map((transaction, index) => (
-                            <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded">
+                            <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
                                 <div>
-                                    <span className="font-medium text-gray-900 dark:text-white">
+                                    <span className="font-medium text-gray-900">
                                         {transaction.bhakt_name}
                                     </span>
-                                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                                    <span className="text-sm text-gray-500 ml-2">
                                         {formatDate(transaction.payment_date)}
                                     </span>
                                 </div>
-                                <div className="text-sm font-medium text-green-600 dark:text-green-400">
+                                <div className="text-sm font-medium text-green-600">
                                     {formatCurrency(transaction.amount_paid)}
                                 </div>
                             </div>

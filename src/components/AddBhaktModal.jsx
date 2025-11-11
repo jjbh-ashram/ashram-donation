@@ -156,7 +156,7 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
         <SimpleModal isOpen={isOpen} onClose={onClose} title="Add New Bhakt">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Name *
                     </label>
                     <input
@@ -164,12 +164,12 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 ${
                             nameValidation.isDuplicate 
-                                ? 'border-red-500 dark:border-red-400' 
+                                ? 'border-red-500' 
                                 : nameValidation.message && !nameValidation.isDuplicate && !nameValidation.isChecking
-                                    ? 'border-green-500 dark:border-green-400'
-                                    : 'border-gray-300 dark:border-gray-600'
+                                    ? 'border-green-500'
+                                    : 'border-gray-300'
                         }`}
                         required
                         disabled={isLoading}
@@ -178,10 +178,10 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                     {nameValidation.message && (
                         <div className={`mt-1 text-sm ${
                             nameValidation.isDuplicate 
-                                ? 'text-red-600 dark:text-red-400' 
+                                ? 'text-red-600' 
                                 : nameValidation.isChecking
-                                    ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-green-600 dark:text-green-400'
+                                    ? 'text-blue-600'
+                                    : 'text-green-600'
                         }`}>
                             {nameValidation.message}
                         </div>
@@ -189,7 +189,7 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Alias Name
                     </label>
                     <input
@@ -197,13 +197,13 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         name="alias_name"
                         value={formData.alias_name}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         disabled={isLoading}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number
                     </label>
                     <input
@@ -211,13 +211,13 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         name="phone_number"
                         value={formData.phone_number}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         disabled={isLoading}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
                     </label>
                     <input
@@ -225,13 +225,13 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         disabled={isLoading}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Address
                     </label>
                     <textarea
@@ -239,13 +239,13 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         value={formData.address}
                         onChange={handleInputChange}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         disabled={isLoading}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Monthly Donation Amount *
                     </label>
                     <input
@@ -255,7 +255,7 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                         onChange={handleInputChange}
                         min="0"
                         step="0.01"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         required
                         disabled={isLoading}
                         placeholder="Enter amount in rupees"
@@ -266,7 +266,7 @@ const AddBhaktModal = ({ isOpen, onClose, onBhaktAdded }) => {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                         disabled={isLoading}
                     >
                         Cancel

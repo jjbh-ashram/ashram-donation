@@ -226,21 +226,21 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
     >
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-            <div className="text-sm text-blue-600 dark:text-blue-400">Total Donations</div>
-            <div className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="text-sm text-blue-600">Total Donations</div>
+            <div className="text-2xl font-bold text-blue-800">
               {filteredDonations.length}
             </div>
           </div>
-          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-            <div className="text-sm text-green-600 dark:text-green-400">Total Amount</div>
-            <div className="text-2xl font-bold text-green-800 dark:text-green-200">
+          <div className="bg-green-50 p-4 rounded-lg">
+            <div className="text-sm text-green-600">Total Amount</div>
+            <div className="text-2xl font-bold text-green-800">
               {formatCurrency(totalAmount)}
             </div>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-            <div className="text-sm text-purple-600 dark:text-purple-400">Unique Bhakts</div>
-            <div className="text-2xl font-bold text-purple-800 dark:text-purple-200">
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="text-sm text-purple-600">Unique Bhakts</div>
+            <div className="text-2xl font-bold text-purple-800">
               {new Set(filteredDonations.map(d => d.bhakt_name)).size}
             </div>
           </div>
@@ -260,12 +260,12 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                 setShowBhaktFilter(e.target.value.length > 0);
               }}
               onFocus={() => searchTerm.length > 0 && setShowBhaktFilter(true)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             />
             
             {/* Bhakt Dropdown */}
             {showBhaktFilter && searchTerm.length > 0 && (
-              <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+              <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                 {filteredBhakts
                   .filter(bhakt => bhakt.name.toLowerCase().includes(searchTerm.toLowerCase()))
                   .slice(0, 10) // Limit to 10 results
@@ -276,15 +276,15 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                         setSearchTerm(bhakt.name);
                         setShowBhaktFilter(false);
                       }}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                     >
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium text-gray-900">
                         {bhakt.name}
                       </div>
                     </div>
                   ))}
                 {filteredBhakts.filter(bhakt => bhakt.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                  <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="px-4 py-2 text-sm text-gray-500">
                     No bhakts found
                   </div>
                 )}
@@ -299,22 +299,22 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
               placeholder="From Date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500"
             />
-            <span className="text-gray-500 dark:text-gray-400 text-sm">to</span>
+            <span className="text-gray-500 text-sm">to</span>
             <input
               type="date"
               placeholder="To Date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500"
             />
           </div>
           
           <div className="flex gap-2">
             <button
               onClick={clearAllFilters}
-              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               Clear Filters
             </button>
@@ -337,11 +337,11 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
                 <th 
-                  className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('bhakt_name')}
                 >
                   <div className="flex items-center">
@@ -354,7 +354,7 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                   </div>
                 </th>
                 <th 
-                  className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('payment_date')}
                 >
                   <div className="flex items-center">
@@ -367,7 +367,7 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                   </div>
                 </th>
                 <th 
-                  className="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                  className="px-6 py-3 cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('amount_paid')}
                 >
                   <div className="flex items-center">
@@ -398,27 +398,27 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                 </tr>
               ) : paginatedDonations.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
                     {searchTerm ? 'No donations found matching your search.' : 'No donations found.'}
                   </td>
                 </tr>
               ) : (
                 paginatedDonations.map((donation, index) => (
-                  <tr key={`${donation.bhakt_id}-${donation.payment_date}-${index}`} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                  <tr key={`${donation.bhakt_id}-${donation.payment_date}-${index}`} className="bg-white border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium text-gray-900">
                       {donation.bhakt_name}
                     </td>
                     <td className="px-6 py-4">
                       {formatDate(donation.payment_date)}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-green-600 dark:text-green-400">
+                    <td className="px-6 py-4 font-semibold text-green-600">
                       {formatCurrency(donation.amount_paid)}
                     </td>
                     <td className="px-6 py-4 max-w-sm">
                       {donation.notes && (
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          <div className="font-medium text-xs text-gray-500 dark:text-gray-400 mb-1">System Notes:</div>
-                          <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded text-xs leading-relaxed overflow-hidden">
+                        <div className="text-sm text-gray-600">
+                          <div className="font-medium text-xs text-gray-500 mb-1">System Notes:</div>
+                          <div className="bg-gray-50 p-2 rounded text-xs leading-relaxed overflow-hidden">
                             {donation.notes}
                           </div>
                         </div>
@@ -426,14 +426,14 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
                     </td>
                     <td className="px-6 py-4 max-w-sm">
                       {donation.remarks ? (
-                        <div className="text-sm text-blue-600 dark:text-blue-400">
-                          <div className="font-medium text-xs text-blue-500 dark:text-blue-400 mb-1">User Remarks:</div>
-                          <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-xs leading-relaxed overflow-hidden">
+                        <div className="text-sm text-blue-600">
+                          <div className="font-medium text-xs text-blue-500 mb-1">User Remarks:</div>
+                          <div className="bg-blue-50 p-2 rounded text-xs leading-relaxed overflow-hidden">
                             {donation.remarks}
                           </div>
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-400 dark:text-gray-500 italic">No remarks</div>
+                        <div className="text-xs text-gray-400 italic">No remarks</div>
                       )}
                     </td>
                   </tr>
@@ -446,24 +446,24 @@ export default function ViewDonationsModal({ isOpen, onClose }) {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="text-sm text-gray-700">
               Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedDonations.length)} of {sortedDonations.length} results
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                className="px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
                 Previous
               </button>
-              <span className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+              <span className="px-3 py-2 text-sm text-gray-700">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                className="px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
                 Next
               </button>

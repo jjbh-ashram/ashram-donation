@@ -250,7 +250,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
         <SimpleModal isOpen={isOpen} onClose={onClose} title="Add Bhiksha Entry">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative" ref={dropdownRef}>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Bhakt Name *
                     </label>
                     <input
@@ -260,43 +260,43 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                         onChange={handleSearchChange}
                         onFocus={handleSearchFocus}
                         placeholder="Search bhakt name..."
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         required
                         autoComplete="off"
                     />
                     
                     {/* Dropdown */}
                     {showDropdown && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {loading ? (
-                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">Loading bhakts...</div>
+                                <div className="px-3 py-2 text-gray-500">Loading bhakts...</div>
                             ) : filteredBhakts.length > 0 ? (
                                 filteredBhakts.map((bhakt) => (
                                     <button
                                         key={bhakt.id}
                                         type="button"
                                         onClick={() => handleBhaktSelect(bhakt)}
-                                        className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none"
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                                     >
-                                        <div className="text-gray-900 dark:text-white font-medium">
+                                        <div className="text-gray-900 font-medium">
                                             {bhakt.name}
                                         </div>
                                         {bhakt.alias_name && (
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            <div className="text-sm text-gray-500">
                                                 ({bhakt.alias_name})
                                             </div>
                                         )}
-                                        <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                                        <div className="text-sm text-green-600 font-semibold">
                                             ₹{bhakt.monthly_donation_amount?.toLocaleString() || '0'}/month
                                         </div>
                                     </button>
                                 ))
                             ) : searchTerm ? (
-                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                                <div className="px-3 py-2 text-gray-500">
                                     No bhakts found for "{searchTerm}"
                                 </div>
                             ) : (
-                                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                                <div className="px-3 py-2 text-gray-500">
                                     Type to search bhakts
                                 </div>
                             )}
@@ -305,7 +305,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Payment Date *
                     </label>
                     <input
@@ -313,13 +313,13 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                         name="paymentDate"
                         value={formData.paymentDate}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         required
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Amount *
                     </label>
                     <input
@@ -330,13 +330,13 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                         min="0"
                         step="0.01"
                         placeholder="Enter amount"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                         required
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                         Remarks
                     </label>
                     <textarea
@@ -345,7 +345,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                         onChange={handleInputChange}
                         rows={3}
                         placeholder="Optional remarks"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                     />
                 </div>
 
@@ -354,7 +354,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                         type="button"
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
@@ -406,10 +406,10 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                             <div className="w-full max-w-md">
                                     <div className="text-lg font-bold mb-4 text-center">🧾Payment Receipt</div>
                                     <div className="mb-2"><span className="font-semibold">Name:</span> {bhakt.name}</div>
-                                    <div className="mb-2"><span className="font-semibold">Monthly Donation:</span> <span className="text-green-600 dark:text-green-400">₹{bhakt.monthly_donation_amount}</span></div>
+                                    <div className="mb-2"><span className="font-semibold">Monthly Donation:</span> <span className="text-green-600">₹{bhakt.monthly_donation_amount}</span></div>
                                     <div className="mb-2"><span className="font-semibold">Last Payment Date:</span> {fmtDate(bhakt.last_payment_date)}</div>
-                                    <div className="mb-2"><span className="font-semibold">Extra Balance:</span> <span className="text-blue-600 dark:text-blue-400">{fmtCurrency(bhakt.carry_forward_balance)}</span></div>
-                                    <div className="mb-2"><span className="font-semibold">Current Status:</span> <span className="font-bold text-purple-700 dark:text-purple-400">{bhakt.payment_status || 'N/A'}</span></div>
+                                    <div className="mb-2"><span className="font-semibold">Extra Balance:</span> <span className="text-blue-600">{fmtCurrency(bhakt.carry_forward_balance)}</span></div>
+                                    <div className="mb-2"><span className="font-semibold">Current Status:</span> <span className="font-bold text-purple-700">{bhakt.payment_status || 'N/A'}</span></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 pt-6">
                                     
