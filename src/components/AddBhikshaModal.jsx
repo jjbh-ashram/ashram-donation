@@ -471,7 +471,7 @@ const AddBhikshaModal = ({ isOpen, onClose, onSuccess }) => {
                             const alias = b.alias_name || '';
                             return name === lastSubmittedName || alias === lastSubmittedName;
                         });
-                        console.log("Checking", bhaktData, lastSubmittedName, bhakt);
+                        // console.log("Checking", bhaktData, lastSubmittedName, bhakt);
                         const fmtDate = (d) => {
                             if (!d) return 'N/A';
                             try { return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return d; }

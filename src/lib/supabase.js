@@ -72,7 +72,7 @@ const verifyPasswordServer = async (password) => {
 
 // Main password verification function with toggle
 export const verifyPassword = async (password) => {
-    console.log(`🔐 Password verification mode: ${PASSWORD_CHECK_MODE}`)
+    // console.log(`🔐 Password verification mode: ${PASSWORD_CHECK_MODE}`)
     
     const result = PASSWORD_CHECK_MODE === 'server' 
         ? await verifyPasswordServer(password)
