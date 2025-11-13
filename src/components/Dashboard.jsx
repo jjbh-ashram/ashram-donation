@@ -11,7 +11,7 @@ import ActivitySummary from './ActivitySummary';
 import { useBhaktData } from '../hooks/useBhaktData';
 import { useYearConfig } from '../hooks/useYearConfig';
 
-const Dashboard = () => {
+const Dashboard = ({ navigate }) => {
     const { fetchAvailableYears } = useBhaktData();
     const { fetchYears, populateMonthlySync } = useYearConfig();
     const [showAddBhaktModal, setShowAddBhaktModal] = useState(false);
@@ -144,8 +144,10 @@ const Dashboard = () => {
                 <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-4">
-                            <h1 className="text-base sm:text-lg xl:text-2xl font-bold text-gray-900">
-                                Shri Shri Prabhu JagatBandhu Ashram 
+                            <h1 className="relative text-xl sm:text-2xl font-black text-gray-900">
+                                <span className="absolute inset-0 blur-sm bg-gradient-to-r from-blue-200 via-sky-300 to-blue-200 opacity-40"></span>
+                                <span className="relative">श्री श्री प्रभु जगद्बन्धु सुंदर आश्रम</span>
+                                {/* Shri Shri Prabhu JagatBandhu Sundar Ashram */}
                             </h1>
                             {/* <span className="hidden sm:inline px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
                                 Auth: {authMode}
@@ -232,46 +234,69 @@ const Dashboard = () => {
                         
                         
                             {/* Action Buttons - Desktop */}
-                            <div className="hidden lg:flex items-center space-x-3 ml-4">
-                                <button
-                                    onClick={handleAddBhiksha}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    Add Bhiksha
-                                </button>
+                            <div className="hidden lg:flex items-center space-x-6 ml-4">
+                                {/* Group 1: Main Actions */}
+                                <div className="flex items-center space-x-4 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                    <button
+                                        onClick={handleAddBhiksha}
+                                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Add Bhiksha
+                                    </button>
+                                    
+                                    <button
+                                        onClick={handlePrintStatus}
+                                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Bhakt Status
+                                    </button>
+                                    <button
+                                        onClick={handleDownloadSheet}
+                                        className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Status (All)
+                                    </button>
+                                    <button
+                                        onClick={() => setShowViewDonationsModal(true)}
+                                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Bhiksha Records
+                                    </button>
+                                    <div className="h-8 w-px bg-gray-300"></div>
+                                    <button
+                                        onClick={handleAddBhakt}
+                                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        New Bhakt
+                                    </button>
+                                    
+                                    
+                                    <div className="h-8 w-px bg-gray-300"></div>
+                                    <button
+                                        onClick={() => setShowBackupsModal(true)}
+                                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Backups
+                                    </button>
+                                </div>
                                 
-                                <button
-                                    onClick={handlePrintStatus}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    Print Bhakt Status
-                                </button>
-                                <button
-                                    onClick={handleDownloadSheet}
-                                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    Download Status (All)
-                                </button>
-                                <button
-                                    onClick={handleAddBhakt}
-                                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    Add New Bhakt
-                                </button>
-                                
-                                {/* View Donations Button */}
-                                <button
-                                    onClick={() => setShowViewDonationsModal(true)}
-                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    View Donations
-                                </button>
-                                <button
-                                    onClick={() => setShowBackupsModal(true)}
-                                    className="ml-8 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200 cursor-pointer"
-                                >
-                                    Backups
-                                </button>
+                                {/* Group 2: System & Navigation */}
+                                <div className="flex items-center space-x-3 px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                                    
+                                    <button
+                                        onClick={() => navigate && navigate('expense')}
+                                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Expenses
+                                    </button>
+                                    <div className="h-8 w-px bg-gray-300"></div>
+                                    <button
+                                        onClick={() => navigate && navigate('files')}
+                                        className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium rounded-md transition duration-200 cursor-pointer shadow-sm"
+                                    >
+                                        Files
+                                    </button>
+                                </div>
                             </div>
                        
                     </div>
@@ -284,39 +309,51 @@ const Dashboard = () => {
                     <div className="flex space-x-3 overflow-x-auto pb-2">
                         <button
                             onClick={handleAddBhiksha}
-                            className="flex-shrink-0 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-green-200"
                         >
                             Add Bhiksha
                         </button>
                         <button
                             onClick={() => setShowBackupsModal(true)}
-                            className="flex-shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-red-200"
                         >
                             Backups
                         </button>
                         <button
                             onClick={handlePrintStatus}
-                            className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-blue-200"
                         >
-                            Print Status
+                            Bhakt Status
                         </button>
                         <button
                             onClick={handleDownloadSheet}
-                            className="flex-shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-orange-200"
                         >
-                            Download
+                            Status (All)
                         </button>
                         <button
                             onClick={handleAddBhakt}
-                            className="flex-shrink-0 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-teal-200"
                         >
-                            Add Bhakt
+                            New Bhakt
                         </button>
                         <button
                             onClick={() => setShowViewDonationsModal(true)}
-                            className="flex-shrink-0 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg whitespace-nowrap"
+                            className="flex-shrink-0 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-purple-200"
                         >
                             View Donations
+                        </button>
+                        <button
+                            onClick={() => navigate && navigate('expense')}
+                            className="flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-indigo-200"
+                        >
+                            Expenses
+                        </button>
+                        <button
+                            onClick={() => navigate && navigate('files')}
+                            className="flex-shrink-0 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium rounded-lg whitespace-nowrap border-2 border-pink-200"
+                        >
+                            Files
                         </button>
                     </div>
                 </div>
@@ -325,7 +362,7 @@ const Dashboard = () => {
             {/* Main Content - Excel-like fixed viewport */}
             <main className="flex-1 overflow-hidden">
                 {/* Container for fixed height table */}
-                <div className="h-full px-2 sm:px-4 py-6">
+                <div className="h-full px-2 py-2">
                     {/* Activity Summary */}
                     {/* <ActivitySummary /> */}
                     

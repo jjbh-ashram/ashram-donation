@@ -27,6 +27,7 @@ const BhikshaTable = ({ selectedYears }) => {
     const [bhaktSearchTerm, setBhaktSearchTerm] = useState('');
     const [filteredBhakts, setFilteredBhakts] = useState([]);
     const filterDropdownRef = useRef(null);
+    const filterMenuRef = useRef(null);
     const filterSearchRef = useRef(null);
     
     const months = [
@@ -62,7 +63,8 @@ const BhikshaTable = ({ selectedYears }) => {
     // Close filter dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target) &&
+                filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
                 setShowBhaktFilter(false);
             }
         };
@@ -189,147 +191,61 @@ const BhikshaTable = ({ selectedYears }) => {
 
     return (
         <div className="h-full flex flex-col bg-white shadow-sm rounded-lg border border-gray-200 transition-colors">
-            {/* Filter Section */}
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between gap-4">
-                    {/* Filter Dropdown - Left aligned */}
-                    <div className="flex items-center space-x-2">
-                        <div className="relative" ref={filterDropdownRef}>
-                            <button
-                                onClick={() => setShowBhaktFilter(!showBhaktFilter)}
-                                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                                </svg>
-                                <span>Filter Bhakts</span>
-                                <svg className={`w-4 h-4 transition-transform ${showBhaktFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                        
-                        {/* Clear Button - Right next to Filter */}
-                        {selectedBhakts.length > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className="flex items-center space-x-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                                <span>Clear</span>
-                            </button>
-                        )}
-                            
-                            {showBhaktFilter && (
-                                <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
-                                    <div className="p-3 border-b border-gray-200">
-                                        <input
-                                            ref={filterSearchRef}
-                                            type="text"
-                                            placeholder="Search bhakts..."
-                                            value={bhaktSearchTerm}
-                                            onChange={(e) => setBhaktSearchTerm(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div className="max-h-64 overflow-y-auto">
-                                        {filteredBhakts.map((bhakt) => {
-                                            const isSelected = selectedBhakts.some(selected => selected.id === bhakt.id);
-                                            return (
-                                                <div
-                                                    key={bhakt.id}
-                                                    onClick={() => toggleBhaktSelection(bhakt)}
-                                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
-                                                        isSelected ? 'bg-blue-50' : ''
-                                                    }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => {}} // Handled by div click
-                                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <div className="flex-1">
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {bhakt.name}
-                                                        </div>
-                                                        {bhakt.alias_name && (
-                                                            <div className="text-xs text-gray-500">
-                                                                {bhakt.alias_name}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+            {/* Filter Dropdown - Rendered outside table for proper z-index */}
+            {showBhaktFilter && (
+                <div 
+                    ref={filterMenuRef}
+                    className="fixed bg-white border border-gray-200 rounded-lg shadow-xl max-h-96 overflow-hidden" 
+                    style={{
+                        top: filterDropdownRef.current?.getBoundingClientRect().bottom + 4 + 'px',
+                        left: filterDropdownRef.current?.getBoundingClientRect().left + 'px',
+                        width: '320px',
+                        zIndex: 9999
+                    }}
+                >
+                    <div className="p-3 border-b border-gray-200">
+                        <input
+                            ref={filterSearchRef}
+                            type="text"
+                            placeholder="Search bhakts..."
+                            value={bhaktSearchTerm}
+                            onChange={(e) => setBhaktSearchTerm(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                        {filteredBhakts.map((bhakt) => {
+                            const isSelected = selectedBhakts.some(selected => selected.id === bhakt.id);
+                            return (
+                                <div
+                                    key={bhakt.id}
+                                    onClick={() => toggleBhaktSelection(bhakt)}
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
+                                        isSelected ? 'bg-blue-50' : ''
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => {}} // Handled by div click
+                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            {bhakt.name}
+                                        </div>
+                                        {bhakt.alias_name && (
+                                            <div className="text-xs text-gray-500">
+                                                {bhakt.alias_name}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                    
-                    {/* Right side - Edit controls and selected count */}
-                    <div className="flex items-center space-x-2">
-                        {/* Edit Mode Toggle */}
-                        <button
-                            onClick={toggleEditMode}
-                            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                                isEditMode
-                                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 '
-                            }`}
-                            disabled={saving}
-                        >
-                            {isEditMode ? (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    <span>Exit Edit</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    <span>Edit Mode</span>
-                                </>
-                            )}
-                        </button>
-
-                        {/* Save Button - Only visible in edit mode with changes */}
-                        {isEditMode && hasUnsavedChanges && (
-                            <button
-                                onClick={saveChanges}
-                                disabled={saving}
-                                className="flex items-center space-x-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {saving ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                                        <span>Saving...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span>Save ({changesCount})</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
-
-                        {/* Selected count */}
-                        {selectedBhakts.length > 0 && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                                {selectedBhakts.length} selected
-                            </span>
-                        )}
+                            );
+                        })}
                     </div>
                 </div>
-            </div>
+            )}
             
             {/* Table Container - Excel-like scrolling with fixed header */}
             <div className="flex-1 overflow-auto table-scroll-container">
@@ -338,7 +254,32 @@ const BhikshaTable = ({ selectedYears }) => {
                         {/* Year Headers */}
                         <tr className="bg-gray-50 border-b border-gray-200">
                             <th className="sticky left-0 bg-gray-50 px-3 py-3 text-left text-sm md:text-base font-semibold text-gray-900 border-r border-gray-200 z-30 mobile-name-column" style={{width: '220px', maxWidth: '220px', minWidth: '220px'}}>
-                                Names
+                                <div className="flex items-center justify-between gap-2">
+                                    <span>Names</span>
+                                    <div ref={filterDropdownRef}>
+                                        <button
+                                            onClick={() => setShowBhaktFilter(!showBhaktFilter)}
+                                            className="flex items-center space-x-1 px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                                            </svg>
+                                            <span>Filter</span>
+                                        </button>
+                                    </div>
+                                    {/* Clear Button */}
+                                    {selectedBhakts.length > 0 && (
+                                        <button
+                                            onClick={clearFilters}
+                                            className="flex items-center space-x-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-colors"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            <span>Clear</span>
+                                        </button>
+                                    )}
+                                </div>
                             </th>
                             {years.map((year, index) => {
                                 const colors = getYearColors(year, index);
@@ -481,16 +422,71 @@ const BhikshaTable = ({ selectedYears }) => {
             </div>
 
             {/* Instructions Footer */}
-            <div className="flex-shrink-0 px-4 py-3 bg-gray-50 border-t border-gray-200 transition-colors">
+            <div className="flex-shrink-0 px-4 py-2 bg-gray-50 border-t border-gray-200 transition-colors">
                 <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span className="font-medium">Total Bhakts: {displayData.length}</span>
+                    <div className="flex items-center space-x-4 sm:inline hidden">
+                        <span className="font-medium">Total Bhakts: {displayData.length}</span>
+                        <span className="font-medium ">
+                            Years: {years.length > 0 ? `${Math.min(...years)}${years.length > 1 ? ' - ' + Math.max(...years) : ''}` : 'None'}
+                        </span>
+                    </div>
                     <span className="hidden sm:inline">
                         {isEditMode 
                             ? 'Edit Mode: Click cells to toggle payment status - Don\'t forget to save!'
                             : 'Transaction-based payment tracking - Use "Add Bhiksha Entry" to record payments'
                         }
                     </span>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                        {/* Edit Mode Toggle */}
+                        <button
+                            onClick={toggleEditMode}
+                            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                                isEditMode
+                                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 '
+                            }`}
+                            disabled={saving}
+                        >
+                            {isEditMode ? (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    <span>Exit Edit</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span>Edit Mode</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* Save Button - Only visible in edit mode with changes */}
+                        {isEditMode && hasUnsavedChanges && (
+                            <button
+                                onClick={saveChanges}
+                                disabled={saving}
+                                className="flex items-center space-x-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {saving ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Save ({changesCount})</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
                         <span className={`font-medium ${
                             isEditMode 
                                 ? 'text-orange-600' 
@@ -498,9 +494,6 @@ const BhikshaTable = ({ selectedYears }) => {
                         }`}>
                             Mode: {isEditMode ? 'Edit' : 'Read-Only'}
                             {hasUnsavedChanges && ` (${changesCount} unsaved)`}
-                        </span>
-                        <span className="font-medium">
-                            Years: {years.length > 0 ? `${Math.min(...years)}${years.length > 1 ? ' - ' + Math.max(...years) : ''}` : 'None'}
                         </span>
                     </div>
                 </div>
