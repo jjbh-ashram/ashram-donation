@@ -249,7 +249,7 @@ const BackupsModal = ({ isOpen, onClose }) => {
                 Preparing...
               </span>
             ) : (
-              'Download Transaction Records'
+              'Download Bhiksha Records'
             )}
           </button>
           
