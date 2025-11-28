@@ -263,13 +263,32 @@ const FileStorageGDrive = ({ navigate }) => {
         }
     };
 
+    const handleDownload = async (file) => {
+        try {
+            // Show loading state if needed (optional, but good UX)
+            // For now just call the download function
+            await GDrive.downloadFile(file);
+        } catch (error) {
+            console.error('Download failed:', error);
+            alert('Failed to download file. Please try again.');
+        }
+    };
+
     const handleShare = async (file) => {
         try {
+            // 1. Make file public
+            await GDrive.setFilePublic(file.id);
+            
+            // 2. Get and copy link
             const url = GDrive.getFileUrl(file);
             await navigator.clipboard.writeText(url);
-            alert('File link copied to clipboard!');
+            
+            alert('File permission updated to "Anyone with link" and link copied to clipboard!');
         } catch (error) {
-            prompt('Copy this link:', GDrive.getFileUrl(file));
+            console.error('Error sharing file:', error);
+            // Fallback if permission update fails
+            const url = GDrive.getFileUrl(file);
+            prompt('Could not update permissions automatically. Copy this link:', url);
         }
     };
 
@@ -623,13 +642,12 @@ const FileStorageGDrive = ({ navigate }) => {
                                                                         >
                                                                             Share
                                                                         </button>
-                                                                        <a
-                                                                            href={file.webContentLink || file.webViewLink}
-                                                                            download={file.name}
+                                                                        <button
+                                                                            onClick={() => handleDownload(file)}
                                                                             className="flex-1 sm:flex-none px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-medium rounded-md transition text-center"
                                                                         >
                                                                             Download
-                                                                        </a>
+                                                                        </button>
                                                                         <button
                                                                             onClick={() => handleDeleteFile(file)}
                                                                             className="flex-1 sm:flex-none px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-medium rounded-md transition"
@@ -696,20 +714,19 @@ const FileStorageGDrive = ({ navigate }) => {
                                                                     </a>
                                                                     <button
                                                                         onClick={() => handleShare(file)}
-                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md transition"
+                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-medium rounded-md transition"
                                                                     >
                                                                         Share
                                                                     </button>
-                                                                    <a
-                                                                        href={file.webContentLink || file.webViewLink}
-                                                                        download={file.name}
-                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition text-center"
+                                                                    <button
+                                                                        onClick={() => handleDownload(file)}
+                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-medium rounded-md transition text-center"
                                                                     >
                                                                         Download
-                                                                    </a>
+                                                                    </button>
                                                                     <button
                                                                         onClick={() => handleDeleteFile(file)}
-                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition"
+                                                                        className="flex-1 sm:flex-none px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-medium rounded-md transition"
                                                                     >
                                                                         Delete
                                                                     </button>

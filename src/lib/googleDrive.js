@@ -457,6 +457,44 @@ export const getFileUrl = (file) => {
 };
 
 /**
+ * Download file content using API token
+ * This avoids 403 errors when the browser is not signed in to the specific Google account
+ */
+export const downloadFile = async (file) => {
+    try {
+        const token = window.gapi.client.getToken();
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+            headers: {
+                'Authorization': `Bearer ${token.access_token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create temporary link and trigger download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        return true;
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        throw error;
+    }
+};
+
+/**
  * Get file by ID
  */
 export const getFile = async (fileId) => {
@@ -489,6 +527,26 @@ export const searchFiles = async (query, folderId = null) => {
         return response.result.files || [];
     } catch (error) {
         console.error('Error searching files:', error);
+        throw error;
+    }
+};
+
+/**
+ * Make file public (anyone with link can view)
+ */
+export const setFilePublic = async (fileId) => {
+    try {
+        await window.gapi.client.drive.permissions.create({
+            fileId: fileId,
+            resource: {
+                role: 'reader',
+                type: 'anyone'
+            }
+        });
+        console.log(`✅ File ${fileId} is now public`);
+        return true;
+    } catch (error) {
+        console.error('Error setting file public:', error);
         throw error;
     }
 };
