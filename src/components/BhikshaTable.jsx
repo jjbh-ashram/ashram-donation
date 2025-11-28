@@ -250,10 +250,10 @@ const BhikshaTable = ({ selectedYears }) => {
             {/* Table Container - Excel-like scrolling with fixed header */}
             <div className="flex-1 overflow-auto table-scroll-container">
                 <table className="table-fixed" style={{minWidth: 'max-content'}}>
-                    <thead className="sticky top-0 z-20">
+                    <thead>
                         {/* Year Headers */}
                         <tr className="bg-gray-50 border-b border-gray-200">
-                            <th className="sticky left-0 bg-gray-50 px-3 py-3 text-left text-sm md:text-base font-semibold text-gray-900 border-r border-gray-200 z-30 mobile-name-column" style={{width: '220px', maxWidth: '220px', minWidth: '220px'}}>
+                            <th className="sticky top-0 left-0 bg-gray-50 px-3 py-3 h-14 text-left text-sm md:text-base font-semibold text-gray-900 border-r border-gray-200 z-50 mobile-name-column" style={{width: '220px', maxWidth: '220px', minWidth: '220px'}}>
                                 <div className="flex items-center justify-between gap-2">
                                     <span>Names</span>
                                     <div ref={filterDropdownRef}>
@@ -284,7 +284,7 @@ const BhikshaTable = ({ selectedYears }) => {
                             {years.map((year, index) => {
                                 const colors = getYearColors(year, index);
                                 return (
-                                    <th key={year} colSpan={12} className={`px-2 py-3 text-center text-base md:text-lg font-bold text-gray-900 border-r border-gray-200 ${colors.header}`}>
+                                    <th key={year} colSpan={12} className={`sticky top-0 px-2 py-3 h-14 text-center text-base md:text-lg font-bold text-gray-900 border-r border-gray-200 z-40 ${colors.header}`}>
                                         {year}
                                     </th>
                                 );
@@ -292,14 +292,14 @@ const BhikshaTable = ({ selectedYears }) => {
                         </tr>
                         {/* Month Headers */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                            <th className="sticky left-0 bg-gray-100 px-3 py-2 text-left text-xs md:text-sm font-medium text-gray-600 border-r border-gray-200 z-30 mobile-name-column" style={{width: '220px', maxWidth: '220px', minWidth: '220px'}}>
-                                Amount
+                            <th className="sticky top-14 left-0 bg-gray-100 px-3 py-2 h-10 text-left text-xs md:text-sm font-medium text-gray-600 border-r border-gray-200 z-50 mobile-name-column" style={{width: '220px', maxWidth: '220px', minWidth: '220px'}}>
+                                Month
                             </th>
                             {years.map((year, yearIndex) => 
                                 months.map(month => {
                                     const colors = getYearColors(year, yearIndex);
                                     return (
-                                        <th key={`${year}-${month}`} className={`px-1 py-2 text-center text-xs md:text-sm font-medium text-gray-600 border-r ${colors.border} ${colors.bg}`} style={{width: '68px', minWidth: '68px', maxWidth: '68px'}}>
+                                        <th key={`${year}-${month}`} className={`sticky top-14 px-1 py-2 h-10 text-center text-xs md:text-sm font-medium text-gray-600 border-r z-40 ${colors.border} ${colors.bg}`} style={{width: '68px', minWidth: '68px', maxWidth: '68px'}}>
                                             {month}
                                         </th>
                                     );
