@@ -53,3 +53,4 @@ database/run_population_and_verify.sql
 database/check_all_triggers.sql
 database/check_monthly_donations_schema.sql
 database/check_trigger_status.sql
+.env
