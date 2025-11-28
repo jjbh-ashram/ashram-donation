@@ -356,6 +356,9 @@ const FileStorageGDrive = ({ navigate }) => {
                         <h1 className="text-xl sm:text-2xl font-black text-gray-900">
                             श्री श्री प्रभु जगद्बन्धु सुंदर आश्रम
                         </h1>
+                        <h1 className="sm:block hidden text-xl sm:text-2xl font-bold text-gray-900">
+                            File Storage
+                        </h1>
                         <div className="flex items-center space-x-3">
                             {!isAutoAuthenticated && (
                                 <button
@@ -507,8 +510,19 @@ const FileStorageGDrive = ({ navigate }) => {
                         {/* Files Browser */}
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="px-4 py-3 border-b border-gray-200">
+                                <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center mb-3">
                                     <h2 className="text-sm font-semibold text-gray-900">Your Files</h2>
+                                    <a
+                                                            href="https://drive.google.com/drive/folders/1nh--1wnAxADMTT5QQT3_u4TQVkpEXqnl?usp=drive_link"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                                        >
+                                                            Open in Drive
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                        </a>
                                 </div>
 
                                 {/* Breadcrumbs */}
@@ -597,9 +611,12 @@ const FileStorageGDrive = ({ navigate }) => {
                                             {/* Files Section */}
                                             {filesInFolder.length > 0 && (
                                                 <div>
-                                                    <p className="text-sm sm:text-base font-medium text-gray-700 mb-3">
-                                                        Files in Root ({filesInFolder.length})
-                                                    </p>
+                                                    
+                                                        <p className="text-sm sm:text-base font-medium text-gray-700">
+                                                            Files in Root ({filesInFolder.length})
+                                                        </p>
+                                                        
+                                                    
                                                     <div className="space-y-2">
                                                         {filesInFolder.map((file) => (
                                                             <div key={file.id} className="p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition">
@@ -665,9 +682,22 @@ const FileStorageGDrive = ({ navigate }) => {
                                     ) : (
                                         /* Files View */
                                         <div>
-                                            <p className="text-sm sm:text-base font-medium text-gray-700 mb-3">
-                                                Files in {currentFolder} ({filesInFolder.length})
-                                            </p>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <p className="text-sm sm:text-base font-medium text-gray-700">
+                                                    Files in {currentFolder} ({filesInFolder.length})
+                                                </p>
+                                                <a
+                                                    href="https://drive.google.com/drive/folders/1nh--1wnAxADMTT5QQT3_u4TQVkpEXqnl?usp=drive_link"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                                                >
+                                                    Open in Drive
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
+                                            </div>
                                             {filesInFolder.length === 0 ? (
                                                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
                                                     <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

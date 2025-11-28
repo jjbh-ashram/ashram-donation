@@ -162,9 +162,148 @@ export default async function handler(req, res) {
       attachments
     })
 
+    // ... (rest of the email sending logic)
+
+    // --- Google Drive Backup Logic ---
+    try {
+      const gDriveFolderBase = `ashramapp/WEEKLY-BACKUPS`
+      
+      // Upload Matrix to GDrive
+      const matrixFolder = `${gDriveFolderBase}/monthly-matrix/${yyyy}-${mm}-${dd}`
+      const matrixFileName = `${timePart}-${fileName}`
+      await uploadToGDrive(buffer, matrixFileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', matrixFolder)
+
+      // Upload Transactions to GDrive (if exists)
+      if (txBuffer && txFileName) {
+        const txFolder = `${gDriveFolderBase}/monthly-transactions/${yyyy}-${mm}-${dd}`
+        const txFinalName = `${timePart}-${txFileName}`
+        await uploadToGDrive(txBuffer, txFinalName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', txFolder)
+      }
+    } catch (gdErr) {
+      console.error('Google Drive Backup Failed:', gdErr)
+      // Don't fail the request if backup fails, just log it
+    }
+
     return res.status(200).json({ success: true, recipients })
   } catch (err) {
     console.error('weekly-report error', err)
     return res.status(500).json({ error: err.message || 'Server error' })
   }
+}
+
+// --- Google Drive Helpers ---
+
+async function getAccessToken() {
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.VITE_GOOGLE_CLIENT_SECRET
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN || process.env.VITE_GOOGLE_REFRESH_TOKEN
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Missing Google Drive credentials')
+  }
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  })
+
+  const data = await response.json()
+  if (!response.ok) throw new Error(data.error_description || 'Failed to get access token')
+  return data.access_token
+}
+
+async function findOrCreateFolder(accessToken, folderName, parentId = null) {
+  // 1. Search
+  let query = `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`
+  if (parentId) query += ` and '${parentId}' in parents`
+  
+  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+  const searchData = await searchRes.json()
+  
+  if (searchData.files && searchData.files.length > 0) {
+    return searchData.files[0].id
+  }
+
+  // 2. Create if not found
+  const metadata = {
+    name: folderName,
+    mimeType: 'application/vnd.google-apps.folder',
+    parents: parentId ? [parentId] : []
+  }
+  
+  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(metadata)
+  })
+  const createData = await createRes.json()
+  return createData.id
+}
+
+async function uploadToGDrive(buffer, fileName, mimeType, folderPath) {
+    try {
+        const accessToken = await getAccessToken()
+        
+        // Resolve path to folder ID
+        const parts = folderPath.split('/').filter(Boolean)
+        let parentId = null // Root
+        
+        for (const part of parts) {
+            parentId = await findOrCreateFolder(accessToken, part, parentId)
+        }
+        
+        // Upload file
+        const metadata = {
+            name: fileName,
+            parents: [parentId]
+        }
+        
+        const boundary = '-------314159265358979323846'
+        const delimiter = "\r\n--" + boundary + "\r\n"
+        const close_delim = "\r\n--" + boundary + "--"
+        
+        const base64Data = buffer.toString('base64')
+        
+        const multipartRequestBody =
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: ' + mimeType + '\r\n' +
+            'Content-Transfer-Encoding: base64\r\n' +
+            '\r\n' +
+            base64Data +
+            close_delim
+
+        const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+            },
+            body: multipartRequestBody
+        })
+        
+        if (!uploadRes.ok) {
+             const errText = await uploadRes.text()
+             throw new Error(`Upload failed: ${errText}`)
+        }
+        
+        console.log(`Uploaded ${fileName} to GDrive: ${folderPath}`)
+        
+    } catch (error) {
+        console.error('GDrive Backup Error:', error)
+        throw error
+    }
 }

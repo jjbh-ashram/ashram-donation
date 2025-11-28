@@ -306,7 +306,7 @@ export const createFolder = async (folderName, parentFolderId = null) => {
 /**
  * Upload a file to Google Drive
  */
-export const uploadFile = async (file, folderName, onProgress = null) => {
+export const uploadFile = async (file, folderName, onProgress = null, customName = null) => {
     try {
         let folderId;
         
@@ -320,7 +320,7 @@ export const uploadFile = async (file, folderName, onProgress = null) => {
 
         // Create file metadata
         const metadata = {
-            name: `${Date.now()}_${file.name}`,
+            name: customName || `${Date.now()}_${file.name}`,
             parents: [folderId]
         };
 
