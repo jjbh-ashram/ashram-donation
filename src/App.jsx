@@ -3,7 +3,8 @@ import { isAuthenticated } from './lib/supabase';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ExpenseTracker from './components/ExpenseTracker';
-import FileStorage from './components/FileStorage';
+// import FileStorage from './components/FileStorage';
+import FileStorage from './components/FileStorageGDrive';
 import { EditModeProvider } from './contexts/EditModeContext';
 
 function App() {
